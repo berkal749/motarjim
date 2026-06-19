@@ -12,6 +12,7 @@ export default defineConfig({
       '@html-native/optimizer': resolve(__dirname, 'packages/optimizer/index.ts'),
       '@html-native/generator-flutter': resolve(__dirname, 'packages/generators/flutter/index.ts'),
       '@html-native/generator-compose': resolve(__dirname, 'packages/generators/compose/index.ts'),
+      '@html-native/generator-core': resolve(__dirname, 'packages/generator-core/index.ts'),
       '@html-native/generator-swiftui': resolve(__dirname, 'packages/generators/swiftui/index.ts'),
       '@html-native/cli': resolve(__dirname, 'packages/cli/index.ts'),
       '@html-native/semantic-analyzer/ai': resolve(__dirname, 'packages/semantic-analyzer/ai.ts'),

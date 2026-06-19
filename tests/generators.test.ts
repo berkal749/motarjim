@@ -3,6 +3,7 @@ import { parseHtml } from '../packages/parser/index.js';
 import { parseCss, applyStyles } from '../packages/css-analyzer/index.js';
 import { detectSemantics } from '../packages/semantic-analyzer/index.js';
 import { styledNodeToIr } from '../packages/ir/index.js';
+import { optimize } from '../packages/optimizer/index.js';
 import { generate as generateFlutter } from '../packages/generators/flutter/index.js';
 import { generate as generateCompose } from '../packages/generators/compose/index.js';
 import { generate as generateSwiftUI } from '../packages/generators/swiftui/index.js';
@@ -15,7 +16,7 @@ function runPipeline(html: string, css: string = '') {
   const hints = detectSemantics(styled);
   const root = { node: ast, styles: {}, children: styled };
   const ir = styledNodeToIr(root, hints);
-  return ir;
+  return optimize(ir);
 }
 
 const SAMPLE_HTML = `<div class="container">

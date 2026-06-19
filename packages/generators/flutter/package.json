@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@html-native/shared": "0.1.0",
-    "@html-native/ir": "0.1.0",
-    "@html-native/optimizer": "0.1.0"
+    "@html-native/generator-core": "0.1.0"
   }
 }

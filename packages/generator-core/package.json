@@ -1,5 +1,5 @@
 {
-  "name": "@html-native/generator-swiftui",
+  "name": "@html-native/generator-core",
   "version": "0.1.0",
   "private": true,
   "main": "index.ts",
@@ -8,7 +8,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@html-native/shared": "0.1.0",
-    "@html-native/generator-core": "0.1.0"
+    "@html-native/shared": "0.1.0"
   }
 }
