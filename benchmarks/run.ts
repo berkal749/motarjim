@@ -60,7 +60,7 @@ function formatRow(label: string, s: { min: number; max: number; mean: number; m
   return `  ${label.padEnd(24)} mean ${meanStr}  min ${minStr}  max ${maxStr}  median ${medianStr}`;
 }
 
-function countUiNodes(node: { children: { reduce: (fn: any, init: number) => number } }): number {
+function countUiNodes(node: UiNode): number {
   return 1 + node.children.reduce((sum: number, c: any) => sum + countUiNodes(c), 0);
 }
 
@@ -116,30 +116,30 @@ function main(): void {
   for (let iter = 0; iter < ITERATIONS; iter++) {
     // Phase 1: Parse HTML
     let ast: ReturnType<typeof parseHtml>;
-    allMeasurements.parseHtml.push(measure(() => { ast = parseHtml(html); }) as number);
+    allMeasurements.parseHtml.push(measure(() => { ast = parseHtml(html); }));
 
     // Phase 2: Parse CSS
     let sheet: ReturnType<typeof parseCss>;
-    allMeasurements.parseCss.push(measure(() => { sheet = parseCss(css); }) as number);
+    allMeasurements.parseCss.push(measure(() => { sheet = parseCss(css); }));
 
     // Phase 3: Apply styles
     let styled: ReturnType<typeof applyStyles>;
-    allMeasurements.applyStyles.push(measure(() => { styled = applyStyles((ast!).children, sheet!); }) as number);
+    allMeasurements.applyStyles.push(measure(() => { styled = applyStyles(ast!.children, sheet!); }));
 
     // Phase 4: Semantic analysis
     let hints: ReturnType<typeof detectSemantics>;
-    allMeasurements.semanticAnalysis.push(measure(() => { hints = detectSemantics(styled!); }) as number);
+    allMeasurements.semanticAnalysis.push(measure(() => { hints = detectSemantics(styled!); }));
 
     // Phase 5: IR conversion
     let ir: ReturnType<typeof styledNodeToIr>;
     allMeasurements.irConversion.push(measure(() => {
       const root = { node: ast!, styles: {}, children: styled! };
       ir = styledNodeToIr(root, hints!);
-    }) as number);
+    }));
 
     // Phase 6: Optimization
     let optimized: ReturnType<typeof optimize>;
-    allMeasurements.optimization.push(measure(() => { optimized = optimize(ir!); }) as number);
+    allMeasurements.optimization.push(measure(() => { optimized = optimize(ir!); }));
 
     // Count IR nodes on first iteration
     if (iter === 0) {

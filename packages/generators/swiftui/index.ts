@@ -103,8 +103,4 @@ ${indentedBody}
   };
 }
 
-export { generateNode as generateSwiftUINode };
 
-function generateNode(node: UiNode, level: number): string {
-  return walkTree(node, swiftuiEmitter, level);
-}

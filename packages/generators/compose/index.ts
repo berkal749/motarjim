@@ -107,8 +107,4 @@ ${indentedBody}
   };
 }
 
-export { generateNode as generateComposeNode };
 
-function generateNode(node: UiNode, level: number): string {
-  return walkTree(node, composeEmitter, level);
-}

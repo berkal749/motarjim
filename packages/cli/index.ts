@@ -77,8 +77,9 @@ program
       const optimized = optimize(ir);
 
       // 6. Generate code
+      const target = opts.target.toLowerCase();
       let result;
-      switch (opts.target) {
+      switch (target) {
         case 'flutter':
           result = generateFlutter(optimized);
           break;

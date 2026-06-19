@@ -1,7 +1,5 @@
 import { UiNode, StyledNode, SemanticHint } from '@html-native/shared';
 
-export { UiNode } from '@html-native/shared';
-
 export function createIrNode(
   type: UiNode['type'],
   properties: Record<string, unknown> = {},

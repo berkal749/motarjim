@@ -3,11 +3,6 @@ import { HtmlNode, HtmlAttribute } from '@html-native/shared';
 
 let nodeCounter = 0;
 
-const SUPPORTED_TAGS = new Set([
-  'div', 'span', 'p', 'img', 'button', 'input', 'textarea', 'form',
-  'ul', 'ol', 'li', 'section', 'article', 'header', 'footer', 'nav', 'a', 'svg',
-]);
-
 function nextId(): string {
   return `node_${++nodeCounter}`;
 }

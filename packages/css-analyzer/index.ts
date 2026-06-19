@@ -27,7 +27,13 @@ export function parseCss(css: string): CssStylesheet {
 
   if (!css.trim()) return result;
 
-  const root = postcss.parse(css);
+  let root: postcss.Root;
+  try {
+    root = postcss.parse(css);
+  } catch {
+    console.warn('Failed to parse CSS, returning empty stylesheet');
+    return result;
+  }
 
   for (const node of root.nodes) {
     if (node.type === 'rule' && node.nodes) {

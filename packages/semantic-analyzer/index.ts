@@ -6,7 +6,7 @@ import {
   UiNodeType,
 } from '@html-native/shared';
 
-export type { SemanticDetector } from './ai.js';
+export type SemanticDetector = (nodes: StyledNode[]) => Promise<SemanticHint[]>;
 
 export function detectSemantics(
   styledNodes: StyledNode[],

@@ -2,10 +2,8 @@
 // Falls back to the rule-based detectSemantics() if Ollama is unavailable.
 // Must never generate platform code — only semantic hints.
 
-import { StyledNode, SemanticHint, HtmlNode } from '@html-native/shared';
-import { detectSemantics } from './index.js';
-
-export type SemanticDetector = (nodes: StyledNode[]) => Promise<SemanticHint[]>;
+import type { StyledNode, SemanticHint, HtmlNode } from '@html-native/shared';
+import { detectSemantics, type SemanticDetector } from './index.js';
 
 export interface AiDetectorConfig {
   model?: string;

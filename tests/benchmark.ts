@@ -85,12 +85,13 @@ for (const scale of [100, 500, 1000]) {
   const { result: styled, duration: styleTime } = measure('applyStyles', () => applyStyles(ast.children, sheet));
   console.log(`  Apply styles:       ${styleTime.toFixed(1)}ms`);
 
-  const { duration: semanticTime } = measure('detectSemantics', () => detectSemantics(styled));
+  let hints: ReturnType<typeof detectSemantics>;
+  const { duration: semanticTime } = measure('detectSemantics', () => { hints = detectSemantics(styled); });
   console.log(`  Semantic analysis:  ${semanticTime.toFixed(1)}ms`);
 
   // Phase 4: IR conversion
   const rootStyled = { node: ast, styles: {}, children: styled };
-  const { result: ir, duration: irTime } = measure('styledNodeToIr', () => styledNodeToIr(rootStyled));
+  const { result: ir, duration: irTime } = measure('styledNodeToIr', () => styledNodeToIr(rootStyled, hints!));
   console.log(`  IR conversion:      ${irTime.toFixed(1)}ms`);
 
   // Phase 5: Optimization

@@ -119,7 +119,7 @@ function formatProps(props: Record<string, unknown>, prefix: string): string {
   const i = prefix + '  ';
   for (const [key, val] of Object.entries(props)) {
     if (key === 'value') continue;
-    lines.push(`${i}${camelToSnake(key)}: ${formatValue(val)}`);
+    lines.push(`${i}${key}: ${formatValue(val)}`);
   }
   return lines.join(',\n');
 }
@@ -133,12 +133,4 @@ function formatValue(val: unknown): string {
   return String(val);
 }
 
-function camelToSnake(s: string): string {
-  return s.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`);
-}
 
-export { generateNode as generateFlutterNode };
-
-function generateNode(node: UiNode, level: number): string {
-  return walkTree(node, flutterEmitter, level);
-}

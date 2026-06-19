@@ -139,13 +139,4 @@ export interface ResponsiveHint {
   styles: ResolvedStyles;
 }
 
-// -- CLI Options --
 
-export interface CliOptions {
-  input: string;
-  css?: string;
-  target: PlatformTarget;
-  output?: string;
-  watch?: boolean;
-  pretty?: boolean;
-}

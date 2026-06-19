@@ -5,7 +5,8 @@
 - **Date:** 2026-06-19
 - **Fixture:** `benchmarks/fixtures/1000-nodes.html` + `1000-nodes.css`
 - **Definition of "1000 nodes":** 1001 raw HTML elements (non-text `<tags>`) in the input.
-  Post-optimization IR node count is 1209 (the optimizer adds wrappers for multiple children).
+  Post-optimization IR node count is 1209 (the optimizer flattens redundant containers,
+  merges adjacent text nodes, and removes empty text).
 - **Method:** 10 iterations per phase, reporting min/max/mean/median via `performance.now()`.
   3 warm-up runs before measurement.
 - **Pipeline measured:** parseHtml → parseCss → applyStyles → detectSemantics → styledNodeToIr → optimize
