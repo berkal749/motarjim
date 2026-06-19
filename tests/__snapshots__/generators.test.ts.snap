@@ -1,0 +1,248 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot tests > card-grid > Compose snapshot > compose-card-grid 1`] = `
+"import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
+
+@Composable
+fun GeneratedComponent() {
+    Column {
+        Card(
+            modifier = Modifier
+        ) {
+            Text(text = "Fast Lightning performance")
+        }
+        Card(
+            modifier = Modifier
+        ) {
+            Text(text = "Secure Data protection")
+        }
+    }
+}
+"
+`;
+
+exports[`Snapshot tests > card-grid > Flutter snapshot > flutter-card-grid 1`] = `
+"import 'package:flutter/material.dart';
+
+class GeneratedWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+    Card(
+        child: Text("Fast Lightning performance"),
+      ),
+    Card(
+        child: Text("Secure Data protection"),
+      ),
+      ],
+    );
+  }
+}
+"
+`;
+
+exports[`Snapshot tests > card-grid > SwiftUI snapshot > swiftui-card-grid 1`] = `
+"import SwiftUI
+
+struct GeneratedView: View {
+    var body: some View {
+    VStack {
+        VStack {
+            Text("Fast Lightning performance")
+        }
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(radius: 4)
+        VStack {
+            Text("Secure Data protection")
+        }
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(radius: 4)
+    }
+    }
+}
+"
+`;
+
+exports[`Snapshot tests > contact-form > Compose snapshot > compose-contact-form 1`] = `
+"import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
+
+@Composable
+fun GeneratedComponent() {
+    Column {
+        Text(text = "Contact")
+        OutlinedTextField(
+            value = "",
+            onValueChange = { },
+            label = { Text("Input") }
+        )
+        OutlinedTextField(
+            value = "",
+            onValueChange = { },
+            label = { Text("Input") }
+        )
+        Button(
+            onClick = { }
+        ) {
+            Text(text = "Send")
+        }
+    }
+}
+"
+`;
+
+exports[`Snapshot tests > contact-form > Flutter snapshot > flutter-contact-form 1`] = `
+"import 'package:flutter/material.dart';
+
+class GeneratedWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      child: Column(
+        children: [
+    Text("Contact"),
+    TextField(
+        decoration: InputDecoration(
+          border: OutlineInputBorder(),
+        ),
+      ),
+    TextField(
+        decoration: InputDecoration(
+          border: OutlineInputBorder(),
+        ),
+      ),
+    ElevatedButton(
+        onPressed: () {},
+        child: Text("Send"),
+      ),
+        ],
+      ),
+    );
+  }
+}
+"
+`;
+
+exports[`Snapshot tests > contact-form > SwiftUI snapshot > swiftui-contact-form 1`] = `
+"import SwiftUI
+
+struct GeneratedView: View {
+    var body: some View {
+    Form {
+        Text("Contact")
+        TextField("Input", text: .constant(""))
+        .textFieldStyle(.roundedBorder)
+        TextField("Input", text: .constant(""))
+        .textFieldStyle(.roundedBorder)
+        Button("Send") {
+            // action
+        }
+    }
+    }
+}
+"
+`;
+
+exports[`Snapshot tests > hero-section > Compose snapshot > compose-hero-section 1`] = `
+"import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
+
+@Composable
+fun GeneratedComponent() {
+    Column {
+        Text(text = "Welcome Build something great")
+        Button(
+            onClick = { }
+        ) {
+            Text(text = "Get Started")
+        }
+    }
+}
+"
+`;
+
+exports[`Snapshot tests > hero-section > Flutter snapshot > flutter-hero-section 1`] = `
+"import 'package:flutter/material.dart';
+
+class GeneratedWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+    Text("Welcome Build something great"),
+    ElevatedButton(
+        onPressed: () {},
+        child: Text("Get Started"),
+      ),
+      ],
+    );
+  }
+}
+"
+`;
+
+exports[`Snapshot tests > hero-section > SwiftUI snapshot > swiftui-hero-section 1`] = `
+"import SwiftUI
+
+struct GeneratedView: View {
+    var body: some View {
+    VStack {
+        Text("Welcome Build something great")
+        Button("Get Started") {
+            // action
+        }
+    }
+    }
+}
+"
+`;
+
+exports[`Snapshot tests > nav-bar > Compose snapshot > compose-nav-bar 1`] = `
+"import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
+
+@Composable
+fun GeneratedComponent() {
+    TopAppBar(
+        title = { Text("Title") }
+    )
+}
+"
+`;
+
+exports[`Snapshot tests > nav-bar > Flutter snapshot > flutter-nav-bar 1`] = `
+"import 'package:flutter/material.dart';
+
+class GeneratedWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text("Title"),
+    );
+  }
+}
+"
+`;
+
+exports[`Snapshot tests > nav-bar > SwiftUI snapshot > swiftui-nav-bar 1`] = `
+"import SwiftUI
+
+struct GeneratedView: View {
+    var body: some View {
+    .navigationTitle("Title")
+    }
+}
+"
+`;

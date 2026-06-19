@@ -99,3 +99,117 @@ describe('Generator boilerplate', () => {
     });
   });
 });
+
+// -- Snapshot tests for varied HTML/CSS examples --
+
+const NAV_HTML = `<nav class="navbar"><div class="container"><h1>My App</h1><ul><li><a href="/">Home</a></li><li><a href="/about">About</a></li></ul></div></nav>`;
+const NAV_CSS = `.navbar { background: #333; color: white; padding: 1rem; } .container { display: flex; align-items: center; } ul { display: flex; gap: 1rem; list-style: none; }`;
+
+const CARD_HTML = `<section class="features"><div class="card"><h2>Fast</h2><p>Lightning performance</p></div><div class="card"><h2>Secure</h2><p>Data protection</p></div></section>`;
+const CARD_CSS = `.features { display: flex; gap: 2rem; } .card { padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }`;
+
+const HERO_HTML = `<section class="hero"><h1>Welcome</h1><p>Build something great</p><button>Get Started</button></section>`;
+const HERO_CSS = `.hero { padding: 6rem 2rem; text-align: center; background: #1a1a2e; color: white; } h1 { font-size: 3rem; }`;
+
+const FORM_HTML = `<form class="contact"><h2>Contact</h2><input type="text" placeholder="Name" /><input type="email" placeholder="Email" /><button type="submit">Send</button></form>`;
+const FORM_CSS = `.contact { display: flex; flex-direction: column; gap: 1rem; max-width: 400px; } input { padding: 0.5rem; border: 1px solid #ccc; }`;
+
+describe('Snapshot tests', () => {
+  const examples: { name: string; html: string; css: string }[] = [
+    { name: 'nav-bar', html: NAV_HTML, css: NAV_CSS },
+    { name: 'card-grid', html: CARD_HTML, css: CARD_CSS },
+    { name: 'hero-section', html: HERO_HTML, css: HERO_CSS },
+    { name: 'contact-form', html: FORM_HTML, css: FORM_CSS },
+  ];
+
+  for (const { name, html, css } of examples) {
+    describe(name, () => {
+      it('Flutter snapshot', () => {
+        const ir = runPipeline(html, css);
+        const result = generateFlutter(ir);
+        expect(result.code).toMatchSnapshot(`flutter-${name}`);
+      });
+
+      it('Compose snapshot', () => {
+        const ir = runPipeline(html, css);
+        const result = generateCompose(ir);
+        expect(result.code).toMatchSnapshot(`compose-${name}`);
+      });
+
+      it('SwiftUI snapshot', () => {
+        const ir = runPipeline(html, css);
+        const result = generateSwiftUI(ir);
+        expect(result.code).toMatchSnapshot(`swiftui-${name}`);
+      });
+    });
+  }
+});
+
+// -- End-to-end integration test: full pipeline for all three platforms --
+
+const FULL_HTML = `<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+  <nav class="navbar"><h1>Site</h1></nav>
+  <section class="hero"><h1>Hero Title</h1><p>Hero description text</p><button>Action</button></section>
+  <div class="card"><h2>Card Title</h2><p>Card body content</p></div>
+  <footer class="footer"><p>Footer content</p></footer>
+</body>
+</html>`;
+
+const FULL_CSS = `
+.navbar { background: #333; color: white; padding: 1rem; }
+.hero { padding: 4rem; text-align: center; background: #1a1a2e; color: white; }
+.card { padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.footer { background: #333; color: white; text-align: center; padding: 2rem; }
+`;
+
+describe('End-to-end full pipeline', () => {
+  it('generates all three platforms from one HTML input', () => {
+    const ir = runPipeline(FULL_HTML, FULL_CSS);
+
+    const flutter = generateFlutter(ir);
+    expect(flutter.code).toContain("import 'package:flutter/material.dart'");
+    expect(flutter.code).toContain('GeneratedWidget');
+    expect(flutter.metadata.nodes).toBeGreaterThan(0);
+
+    const compose = generateCompose(ir);
+    expect(compose.code).toContain('import androidx.compose.material3.*');
+    expect(compose.code).toContain('GeneratedComponent');
+    expect(compose.metadata.nodes).toBeGreaterThan(0);
+
+    const swift = generateSwiftUI(ir);
+    expect(swift.code).toContain('import SwiftUI');
+    expect(swift.code).toContain('GeneratedView');
+    expect(swift.metadata.nodes).toBeGreaterThan(0);
+  });
+
+  it('produces consistent node counts across platforms', () => {
+    const ir = runPipeline(FULL_HTML, FULL_CSS);
+    const flutter = generateFlutter(ir);
+    const compose = generateCompose(ir);
+    const swift = generateSwiftUI(ir);
+    expect(flutter.metadata.nodes).toBe(compose.metadata.nodes);
+    expect(compose.metadata.nodes).toBe(swift.metadata.nodes);
+  });
+
+  it('generates different code per platform from same IR', () => {
+    const ir = runPipeline(FULL_HTML, FULL_CSS);
+    const flutter = generateFlutter(ir).code;
+    const compose = generateCompose(ir).code;
+    const swift = generateSwiftUI(ir).code;
+    expect(flutter).not.toBe(compose);
+    expect(compose).not.toBe(swift);
+  });
+
+  it('does not contain raw HTML in any output', () => {
+    const ir = runPipeline(FULL_HTML, FULL_CSS);
+    const results = [generateFlutter(ir), generateCompose(ir), generateSwiftUI(ir)];
+    for (const result of results) {
+      expect(result.code).not.toContain('<!DOCTYPE');
+      expect(result.code).not.toContain('<html');
+      expect(result.code).not.toContain('<body');
+    }
+  });
+});
