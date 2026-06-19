@@ -1,29 +1,101 @@
-import { CssStylesheet, CssRule, HtmlNode, ResolvedStyles, StyledNode } from '@html-native/shared';
+// CSS analyzer using PostCSS for proper parsing with media query support.
+// Maintains the same external API: parseCss(), matchSelector(), resolveStyles(), applyStyles().
+
+import postcss from 'postcss';
+import { CssStylesheet, CssRule, CssMediaQuery, HtmlNode, ResolvedStyles, StyledNode, ResponsiveHint } from '@html-native/shared';
+
+function parseDeclarations(declNodes: postcss.ChildNode[]): CssRule['declarations'] {
+  const declarations: CssRule['declarations'] = [];
+  for (const decl of declNodes) {
+    if (decl.type === 'decl') {
+      declarations.push({
+        property: decl.prop,
+        value: decl.value.replace(/!important\s*$/, '').trim(),
+        important: decl.important,
+      });
+    }
+  }
+  return declarations;
+}
+
+function parseSelectors(selector: string): string[] {
+  return selector.split(',').map(s => s.trim()).filter(Boolean);
+}
 
 export function parseCss(css: string): CssStylesheet {
-  const rules: CssRule[] = [];
-  const blocks = css.match(/([^{]+)\{([^}]+)\}/g);
-  if (!blocks) return { rules };
+  const result: CssStylesheet = { rules: [], mediaQueries: [] };
 
-  for (const block of blocks) {
-    const match = block.match(/([^{]+)\{([^}]+)\}/);
-    if (!match) continue;
-    const selectorStr = match[1].trim();
-    const declStr = match[2].trim();
-    const selectors = selectorStr.split(',').map(s => s.trim()).filter(Boolean);
-    const declarations = declStr.split(';').map(d => d.trim()).filter(Boolean).map(decl => {
-      const parts = decl.split(':');
-      if (parts.length < 2) return null;
-      const property = parts[0].trim();
-      const value = parts.slice(1).join(':').trim().replace(/!important$/, '').trim();
-      const important = decl.includes('!important');
-      return { property, value, important };
-    }).filter((d): d is CssRule['declarations'][number] => d !== null);
+  if (!css.trim()) return result;
 
-    rules.push({ selectors, declarations });
+  const root = postcss.parse(css);
+
+  for (const node of root.nodes) {
+    if (node.type === 'rule' && node.nodes) {
+      for (const sel of parseSelectors(node.selector)) {
+        result.rules.push({
+          selectors: [sel],
+          declarations: parseDeclarations(node.nodes),
+        });
+      }
+    } else if (node.type === 'atrule' && node.name === 'media' && node.nodes) {
+      const mediaRules: CssRule[] = [];
+      for (const child of node.nodes) {
+        if (child.type === 'rule' && child.nodes) {
+          for (const sel of parseSelectors(child.selector)) {
+            mediaRules.push({
+              selectors: [sel],
+              declarations: parseDeclarations(child.nodes),
+            });
+          }
+        }
+      }
+      if (mediaRules.length > 0) {
+        result.mediaQueries.push({
+          condition: node.params,
+          rules: mediaRules,
+        });
+      }
+    }
   }
 
-  return { rules };
+  return result;
+}
+
+export function extractResponsiveHints(stylesheet: CssStylesheet): ResponsiveHint[] {
+  const hints: ResponsiveHint[] = [];
+
+  for (const mq of stylesheet.mediaQueries) {
+    const condition = mq.condition;
+    const minMatch = condition.match(/min-width\s*:\s*([^)\s]+)/);
+    const maxMatch = condition.match(/max-width\s*:\s*([^)\s]+)/);
+    const minHMatch = condition.match(/min-height\s*:\s*([^)\s]+)/);
+    const maxHMatch = condition.match(/max-height\s*:\s*([^)\s]+)/);
+
+    let conditionType: ResponsiveHint['condition'] | null = null;
+    let value = '';
+
+    if (minMatch) { conditionType = 'min-width'; value = minMatch[1]; }
+    else if (maxMatch) { conditionType = 'max-width'; value = maxMatch[1]; }
+    else if (minHMatch) { conditionType = 'min-height'; value = minHMatch[1]; }
+    else if (maxHMatch) { conditionType = 'max-height'; value = maxHMatch[1]; }
+
+    if (conditionType) {
+      for (const rule of mq.rules) {
+        const styles: ResolvedStyles = {};
+        for (const decl of rule.declarations) {
+          styles[decl.property] = decl.value;
+        }
+        hints.push({
+          breakpoint: `${conditionType}: ${value}`,
+          condition: conditionType,
+          value,
+          styles,
+        });
+      }
+    }
+  }
+
+  return hints;
 }
 
 export function matchSelector(selector: string, node: HtmlNode): boolean {

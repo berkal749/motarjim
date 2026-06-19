@@ -33,8 +33,14 @@ export interface CssRule {
   sourceLocation?: SourceLocation;
 }
 
+export interface CssMediaQuery {
+  condition: string;
+  rules: CssRule[];
+}
+
 export interface CssStylesheet {
   rules: CssRule[];
+  mediaQueries: CssMediaQuery[];
 }
 
 // -- Resolved Styles (HTML node -> computed styles) --
@@ -122,6 +128,15 @@ export interface SemanticHint {
   confidence: number;
   node: HtmlNode;
   reason: string;
+}
+
+// -- Responsive hints for media queries --
+
+export interface ResponsiveHint {
+  breakpoint: string;
+  condition: 'min-width' | 'max-width' | 'min-height' | 'max-height';
+  value: string;
+  styles: ResolvedStyles;
 }
 
 // -- CLI Options --
