@@ -6,6 +6,13 @@ import {
   UiNodeType,
 } from '@html-native/shared';
 
+export {
+  SemanticPatternStore,
+  getGlobalPatternStore,
+  resetGlobalPatternStore,
+} from './embeddings.js';
+export type { UiPattern, PatternMatch } from './embeddings.js';
+
 export type SemanticDetector = (nodes: StyledNode[]) => Promise<SemanticHint[]>;
 
 export function detectSemantics(

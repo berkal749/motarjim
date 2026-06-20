@@ -1,5 +1,11 @@
 import { UiNode } from '@html-native/shared';
 
+export {
+  selectWidget,
+  suggestWidgetsForTree,
+} from './widget-engine.js';
+export type { SelectionContext, TreeWidgetSuggestions } from './widget-engine.js';
+
 // -- Shared utilities --
 
 export function countNodes(node: UiNode): number {
@@ -26,7 +32,9 @@ export function escapeStringExtra(s: string, extra: Record<string, string>): str
 
 export function findTextLabel(node: UiNode): string {
   const textChild = node.children.find(c => c.type === 'Text');
-  return textChild ? (textChild.value ?? '') : '';
+  if (textChild) return textChild.value ?? '';
+  if (node.value) return node.value;
+  return String(node.properties?.label ?? '');
 }
 
 export function getNonTextChildren(node: UiNode): UiNode[] {

@@ -53,6 +53,7 @@ export interface StyledNode {
   node: HtmlNode;
   styles: ResolvedStyles;
   children: StyledNode[];
+  layoutIntent?: LayoutIntent;
 }
 
 // -- IR Types --
@@ -104,6 +105,8 @@ export interface UiNode {
   styles?: ResolvedStyles;
   sourceHtmlTag?: string;
   value?: string;
+  semanticIntent?: SemanticIntent;
+  responsiveMetadata?: ResponsiveMetadata;
 }
 
 // -- Platform target --
@@ -137,6 +140,71 @@ export interface ResponsiveHint {
   condition: 'min-width' | 'max-width' | 'min-height' | 'max-height';
   value: string;
   styles: ResolvedStyles;
+}
+
+// -- AI-specific types --
+
+export type SemanticIntent =
+  | 'Hero'
+  | 'Card'
+  | 'Pricing'
+  | 'Sidebar'
+  | 'Dashboard'
+  | 'Navbar'
+  | 'Footer'
+  | 'Header'
+  | 'Dialog'
+  | 'Form'
+  | 'List'
+  | 'Grid'
+  | 'Marketing'
+  | 'ProductCard'
+  | 'Unknown';
+
+export type LayoutIntentType =
+  | 'Centered'
+  | 'Grid'
+  | 'Stack'
+  | 'SidebarLayout'
+  | 'HeroLayout'
+  | 'ResponsiveGrid'
+  | 'FlexRow'
+  | 'FlexColumn'
+  | 'Unknown';
+
+export interface LayoutIntent {
+  type: LayoutIntentType;
+  properties: Record<string, string>;
+  confidence: number;
+}
+
+export interface Breakpoint {
+  condition: 'min-width' | 'max-width' | 'min-height' | 'max-height';
+  value: string;
+  layoutHints: LayoutIntent[];
+}
+
+export interface ResponsiveMetadata {
+  breakpoints: Breakpoint[];
+  preferredLayout: string;
+  mobileFirst: boolean;
+}
+
+export interface WidgetSuggestion {
+  platform: PlatformTarget;
+  widget: string;
+  reason: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface AiDetectorConfig {
+  model?: string;
+  baseUrl?: string;
+  timeout?: number;
+  retryCount?: number;
+  batchSize?: number;
+  enableEmbeddings?: boolean;
+  embeddingModel?: string;
 }
 
 

@@ -1,14 +1,14 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { parseHtml } from '@html-native/parser';
-import { parseCss, applyStyles } from '@html-native/css-analyzer';
+import { parseCss, applyStyles, analyzeLayoutIntents, buildResponsiveMetadata } from '@html-native/css-analyzer';
 import { detectSemantics } from '@html-native/semantic-analyzer';
-import { styledNodeToIr } from '@html-native/ir';
+import { styledNodeToIr, enrichWithIntent, enrichWithIntentSync } from '@html-native/ir';
 import { optimize } from '@html-native/optimizer';
 import { generate as generateFlutter } from '@html-native/generator-flutter';
 import { generate as generateCompose } from '@html-native/generator-compose';
 import { generate as generateSwiftUI } from '@html-native/generator-swiftui';
-import type { HtmlNode, StyledNode, PlatformTarget, GenerateResult } from '@html-native/shared';
+import type { HtmlNode, StyledNode, PlatformTarget, GenerateResult, UiNode } from '@html-native/shared';
 import type { ResolvedOptions, ConversionStats } from '../types.js';
 import { countComponentNodes, countLines, computeOptimizationSavings, generateStatsTable } from './stats.js';
 import { createPipelineSpinners } from '../ui/progress.js';
@@ -46,8 +46,14 @@ export async function runPipeline(options: ResolvedOptions): Promise<PipelineRes
     spinners.succeed('Parsing CSS');
 
     spinners.start('Semantic Analysis');
-    const styledNodes = applyStyles(ast.children, stylesheet);
+    let styledNodes = applyStyles(ast.children, stylesheet);
     const styledCount = styledNodes.reduce((acc, n) => acc + countHtmlNodes(n.node), 0);
+
+    // CSS intent analysis (always runs, no AI needed)
+    styledNodes = analyzeLayoutIntents(styledNodes);
+
+    // Responsive metadata (always runs)
+    const responsiveMetadata = buildResponsiveMetadata(stylesheet);
 
     let hints;
     if (options.aiEnhance) {
@@ -64,8 +70,22 @@ export async function runPipeline(options: ResolvedOptions): Promise<PipelineRes
       node: ast,
       styles: {},
       children: styledNodes,
+      layoutIntent: { type: 'Stack', properties: {}, confidence: 1 },
     };
-    const ir = styledNodeToIr(rootStyled, hints);
+    let ir = styledNodeToIr(rootStyled, hints);
+
+    // Attach responsive metadata
+    if (responsiveMetadata.breakpoints.length > 0) {
+      ir = attachResponsiveMetadata(ir, responsiveMetadata);
+    }
+
+    // AI-powered intent inference (rule-based always, AI if enabled)
+    if (options.aiEnhance) {
+      ir = await enrichWithIntent(ir, { enabled: true, aiConfig: options.aiModel ? { model: options.aiModel } : undefined });
+    } else {
+      ir = enrichWithIntentSync(ir);
+    }
+
     const componentsDetected = countComponentNodes(ir);
     spinners.succeed('IR Conversion');
 
@@ -109,6 +129,17 @@ export async function runPipeline(options: ResolvedOptions): Promise<PipelineRes
     spinners.stopAll();
     throw err;
   }
+}
+
+function attachResponsiveMetadata(ir: UiNode, metadata: any): UiNode {
+  function walk(node: UiNode): UiNode {
+    return {
+      ...node,
+      responsiveMetadata: metadata,
+      children: node.children.map(walk),
+    };
+  }
+  return walk(ir);
 }
 
 export function writeOutput(code: string, outputPath: string): void {

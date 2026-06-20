@@ -4,6 +4,17 @@
 import postcss from 'postcss';
 import { CssStylesheet, CssRule, CssMediaQuery, HtmlNode, ResolvedStyles, StyledNode, ResponsiveHint } from '@html-native/shared';
 
+export { detectLayoutIntent, analyzeLayoutIntents, describeLayout, LAYOUT_PATTERNS } from './intent.js';
+export {
+  extractBreakpoints,
+  detectMobileFirst,
+  buildResponsiveMetadata,
+  detectResponsivePatterns,
+  classifyBreakpoint,
+  BREAKPOINT_LABELS,
+} from './responsive.js';
+export type { ResponsivePattern } from './responsive.js';
+
 function parseDeclarations(declNodes: postcss.ChildNode[]): CssRule['declarations'] {
   const declarations: CssRule['declarations'] = [];
   for (const decl of declNodes) {

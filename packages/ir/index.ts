@@ -1,5 +1,8 @@
 import { UiNode, StyledNode, SemanticHint } from '@html-native/shared';
 
+export { enrichWithIntent, enrichWithIntentSync } from './ai-intent.js';
+export type { AIIntentInferenceConfig } from './ai-intent.js';
+
 export function createIrNode(
   type: UiNode['type'],
   properties: Record<string, unknown> = {},
