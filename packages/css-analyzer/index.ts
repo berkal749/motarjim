@@ -40,7 +40,7 @@ function parseDeclarations(declNodes: postcss.ChildNode[]): CssRule['declaration
       declarations.push({
         property: decl.prop,
         value: decl.value.replace(/!important\s*$/, '').trim(),
-        important: decl.important,
+        important: decl.important === true,
       });
     }
   }

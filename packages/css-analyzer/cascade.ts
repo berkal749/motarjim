@@ -67,9 +67,9 @@ function cascadeCompare(a: CascadeEntry, b: CascadeEntry): number {
   if (a.inline !== b.inline) return a.inline ? 1 : -1;
 
   const diff =
-    (b.specificity.id - a.specificity.id) ||
-    (b.specificity.class - a.specificity.class) ||
-    (b.specificity.tag - a.specificity.tag);
+    (a.specificity.id - b.specificity.id) ||
+    (a.specificity.class - b.specificity.class) ||
+    (a.specificity.tag - b.specificity.tag);
   if (diff !== 0) return diff;
 
   return a.sourceOrder - b.sourceOrder;

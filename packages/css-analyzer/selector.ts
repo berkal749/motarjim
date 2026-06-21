@@ -38,33 +38,36 @@ function parseAttribute(s: string, i: number): { attr: SelectorSimple; end: numb
   i = skipWhitespace(s, i);
   let operator: string | undefined;
   let compareValue: string | undefined;
-  if (i < s.length && '~|^$*'.includes(s[i])) {
-    const opStart = i;
-    if (s[i + 1] === '=') {
+  if (i < s.length) {
+    if (s[i] === '=') {
+      operator = '=';
+      i++;
+    } else if ('~|^$*'.includes(s[i]) && s[i + 1] === '=') {
       operator = s.slice(i, i + 2);
       i += 2;
-    } else {
-      i++;
     }
-    operator = s.slice(opStart, i);
-    i = skipWhitespace(s, i);
-    if (s[i] === '"' || s[i] === "'") {
-      const valStart = i;
-      i = readString(s, i);
-      compareValue = s.slice(valStart + 1, i - 1);
-    } else {
-      const valStart = i;
-      while (i < s.length && s[i] !== ']' && !isIdent(s[i])) i++;
-      if (i < s.length) {
-        i = readIdent(s, i);
-        compareValue = s.slice(valStart, i);
+    if (operator) {
+      i = skipWhitespace(s, i);
+      if (s[i] === '"' || s[i] === "'") {
+        const valStart = i;
+        i = readString(s, i);
+        compareValue = s.slice(valStart + 1, i - 1);
+      } else {
+        const valStart = i;
+        while (i < s.length && s[i] !== ']' && !isIdent(s[i])) i++;
+        if (!isIdent(s[valStart]) && valStart < s.length) {
+          compareValue = s.slice(valStart, i);
+        } else {
+          i = readIdent(s, i);
+          compareValue = s.slice(valStart, i);
+        }
       }
     }
   }
   i = skipWhitespace(s, i);
   if (s[i] === ']') i++;
   return {
-    attr: { type: 'attribute', value: name, operator, compareValue },
+    simple: { type: 'attribute', value: name, operator, compareValue },
     end: i,
   };
 }
@@ -85,7 +88,7 @@ function parsePseudo(s: string, i: number): { pseudo: SelectorSimple; end: numbe
     }
   }
   return {
-    pseudo: { type: 'pseudo', value: name },
+    simple: { type: 'pseudo', value: name },
     end: i,
   };
 }
