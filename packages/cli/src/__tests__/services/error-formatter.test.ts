@@ -12,7 +12,7 @@ describe('formatError', () => {
     const result = formatError(new Error('backdrop-filter is not supported'));
     expect(result.title).toBe('Unsupported CSS property: backdrop-filter');
     expect(result.details).toContain('Supported alternatives:');
-    expect(result.details).toContain('  • opacity');
+    expect(result.details).toContain('  - opacity');
   });
 
   it('formats file not found errors', () => {
@@ -37,9 +37,9 @@ describe('formatValidationIssues', () => {
     ];
 
     const output = formatValidationIssues(issues);
-    expect(output).toContain('✖');
-    expect(output).toContain('⚠');
-    expect(output).toContain('ℹ');
+    expect(output).toContain('X');
+    expect(output).toContain('!');
+    expect(output).toContain('i');
     expect(output).toContain('test.html:1');
     expect(output).toContain('Use opacity');
   });

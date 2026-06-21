@@ -1,21 +1,43 @@
-import { UiNode, StyledNode, SemanticHint } from '@html-native/shared';
+import type { UiNode, StyledNode, SemanticHint, NormalizedHint, AccessibilityInfo, Result, SourceSpan } from '@html-native/shared';
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
+import { computeStyle } from '@html-native/css-analyzer';
+
+export { enrichWithIntent, enrichWithIntentSync } from './ai-intent.js';
+export type { AIIntentInferenceConfig } from './ai-intent.js';
+
+// Accept both legacy SemanticHint and new NormalizedHint
+type AnyHint = SemanticHint | NormalizedHint;
 
 export function createIrNode(
   type: UiNode['type'],
   properties: Record<string, unknown> = {},
   children: UiNode[] = [],
   value?: string,
+  sourceSpan?: SourceSpan,
+  sourceHtmlTag?: string,
+  originalNodeId?: string,
+  computed?: UiNode['computed'],
+  accessibility?: AccessibilityInfo,
 ): UiNode {
-  return { type, properties, children, value };
+  return { type, properties, children, value, sourceSpan, sourceHtmlTag, originalNodeId, computed, accessibility };
 }
 
-export function styledNodeToIr(styled: StyledNode, hints: SemanticHint[] = []): UiNode {
+export function styledNodeToIr(
+  styled: StyledNode,
+  hints: AnyHint[] = [],
+  accessibilityMap?: Map<string, AccessibilityInfo>,
+): Result<UiNode> {
+  const bag = new DiagnosticBag();
   const hasClass = (name: string) =>
     styled.node.attributes.some(a => a.name === 'class' && a.value.split(/\s+/).includes(name));
 
   let type: UiNode['type'] = 'Unknown';
   const props: Record<string, unknown> = {};
   const tag = styled.node.tagName;
+
+  if (!tag) {
+    bag.addWarning('IR_001', 'Encountered node with empty tag name', 'ir');
+  }
 
   const hint = hints.find(h => h.node.nodeId === styled.node.nodeId);
   if (hint && hint.confidence > 0.5) {
@@ -26,10 +48,11 @@ export function styledNodeToIr(styled: StyledNode, hints: SemanticHint[] = []): 
 
   Object.assign(props, extractProps(styled));
 
+  const computed = computeStyle(styled.styles);
+
   const nodeValue = (props.value as string) || undefined;
   delete props.value;
 
-  // For text-like elements (h1-h6, p, span, #text), extract text from child #text nodes
   const textTags = new Set(['h1','h2','h3','h4','h5','h6','p','span','a','label','#text']);
   let effectiveValue = nodeValue;
 
@@ -45,15 +68,28 @@ export function styledNodeToIr(styled: StyledNode, hints: SemanticHint[] = []): 
     }
   }
 
-  // Build children, skipping #text nodes whose content was absorbed
   const children = styled.children
     .filter(c => {
       if (effectiveValue && textTags.has(tag) && c.node.tagName === '#text') return false;
       return true;
     })
-    .map(c => styledNodeToIr(c, hints));
+    .map(c => {
+      const childResult = styledNodeToIr(c, hints, accessibilityMap);
+      if (!childResult.ok) {
+        for (const d of childResult.diagnostics) bag.add(d);
+      }
+      return childResult.ok ? childResult.value : createIrNode('Unknown', {}, [], '');
+    });
 
-  return createIrNode(type, props, children, effectiveValue);
+  const a11y = accessibilityMap?.get(styled.node.nodeId);
+  const node = createIrNode(type, props, children, effectiveValue,
+    styled.node.sourceSpan,
+    styled.node.tagName,
+    styled.node.nodeId,
+    computed,
+    a11y,
+  );
+  return bag.toResult(node);
 }
 
 function inferType(

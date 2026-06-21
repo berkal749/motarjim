@@ -1,4 +1,7 @@
+import type { Diagnostic } from '@html-native/shared';
+import { formatDiagnostics } from '@html-native/shared/diagnostics.js';
 import type { ValidationIssue } from '../types.js';
+import { PipelineError } from './pipeline.js';
 
 const UNSUPPORTED_CSS_PROPERTIES: Record<string, string[]> = {
   'backdrop-filter': ['opacity', 'blur', 'shadow'],
@@ -25,6 +28,10 @@ export interface FormattedError {
 }
 
 export function formatError(error: Error, file?: string, line?: number, col?: number): FormattedError {
+  if (error instanceof PipelineError) {
+    return formatPipelineError(error);
+  }
+
   const message = error.message;
   const formatted: FormattedError = {
     title: message,
@@ -40,7 +47,7 @@ export function formatError(error: Error, file?: string, line?: number, col?: nu
       formatted.title = `Unsupported CSS property: ${prop}`;
       formatted.details = [
         'Supported alternatives:',
-        ...alternatives.map(a => `  • ${a}`),
+        ...alternatives.map(a => `  - ${a}`),
       ];
       if (file) formatted.details.push(`\nFile: ${file}${line ? `:${line}` : ''}`);
       break;
@@ -58,20 +65,47 @@ export function formatError(error: Error, file?: string, line?: number, col?: nu
     formatted.details = [
       `"${message.match(/[""](.+?)[""]/)?.[1] || ''}" is not a valid target.`,
       'Supported targets:',
-      '  • flutter   (.dart)',
-      '  • compose   (.kt)',
-      '  • swiftui   (.swift)',
+      '  - flutter   (.dart)',
+      '  - compose   (.kt)',
+      '  - swiftui   (.swift)',
     ];
   }
 
   return formatted;
 }
 
+function formatPipelineError(error: PipelineError): FormattedError {
+  const errors = error.diagnostics.filter(d => d.severity === 'error');
+  const warnings = error.diagnostics.filter(d => d.severity === 'warning');
+
+  const details: string[] = [];
+
+  for (const d of errors) {
+    const loc = d.sourceSpan
+      ? ` ${d.sourceSpan.file}:${d.sourceSpan.start.line}:${d.sourceSpan.start.column}`
+      : '';
+    details.push(`[${d.code}]${loc} - ${d.message}`);
+  }
+
+  if (warnings.length > 0) {
+    details.push('');
+    details.push('Warnings:');
+    for (const d of warnings) {
+      details.push(`  [${d.code}] - ${d.message}`);
+    }
+  }
+
+  return {
+    title: `Pipeline failed with ${errors.length} error(s) in phase "${errors[0]?.phase ?? 'unknown'}"`,
+    details,
+  };
+}
+
 export function formatValidationIssues(issues: ValidationIssue[]): string {
   const lines: string[] = [];
 
   for (const issue of issues) {
-    const icon = issue.type === 'error' ? '✖' : issue.type === 'warning' ? '⚠' : 'ℹ';
+    const icon = issue.type === 'error' ? 'X' : issue.type === 'warning' ? '!' : 'i';
     const location = issue.file ? `${issue.file}${issue.line ? `:${issue.line}` : ''}` : '';
     const loc = location ? `\n  ${' '.repeat(4)}File: ${location}` : '';
     const sug = issue.suggestion ? `\n  ${' '.repeat(4)}Suggestion: ${issue.suggestion}` : '';
@@ -83,7 +117,7 @@ export function formatValidationIssues(issues: ValidationIssue[]): string {
 }
 
 export function displayFormattedError(formatted: FormattedError): void {
-  console.error(`\n✖ ${formatted.title}`);
+  console.error(`\nX ${formatted.title}`);
   if (formatted.details.length > 0) {
     for (const detail of formatted.details) {
       console.error(`  ${detail}`);

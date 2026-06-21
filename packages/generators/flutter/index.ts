@@ -1,7 +1,6 @@
-import { UiNode, GenerateResult, PlatformTarget } from '@html-native/shared';
+import type { UiNode, GenerateResult, PlatformTarget, Result } from '@html-native/shared';
 import { countNodes, escapeStringExtra, NodeEmitter, walkTree } from '@html-native/generator-core';
-
-// Flutter generator: wraps widget trees in a StatelessWidget with material.dart imports.
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
 
 function escapeDart(s: string): string {
   return escapeStringExtra(s, { '$': '\\$' });
@@ -15,9 +14,13 @@ const flutterEmitter: NodeEmitter = {
     return `Text("${escapeDart(val)}")`;
   },
 
-  emitButton(indent: string, label: string, children: string[]): string {
+  emitButton(node: UiNode, indent: string, label: string, children: string[]): string {
     const childBlock = children.length ? `\n${children.join('\n')}\n${indent}` : '';
-    return `ElevatedButton(\n${indent}  onPressed: () {},\n${indent}  child: ${childBlock || `Text("${escapeDart(label)}")`},\n${indent})`;
+    const a11y = node.accessibility;
+    const semantics = a11y?.label || a11y?.role
+      ? `\n${indent}  semanticLabel: "${escapeDart(a11y?.label || label)}",`
+      : '';
+    return `ElevatedButton(\n${indent}  onPressed: () {},${semantics}\n${indent}  child: ${childBlock || `Text("${escapeDart(label)}")`},\n${indent})`;
   },
 
   emitRow(indent: string, children: string[]): string {
@@ -31,7 +34,7 @@ const flutterEmitter: NodeEmitter = {
   },
 
   emitContainer(node: UiNode, indent: string, children: string[]): string {
-    const props = formatProps(node.properties, indent);
+    const props = formatProps(node.properties, indent, node.computed);
     if (!children.length) {
       return `${indent}Container(${props ? `\n${props}\n${indent}` : ''})`;
     }
@@ -42,18 +45,27 @@ const flutterEmitter: NodeEmitter = {
     return `Container(\n${props ? `${props},\n` : ''}${indent}  child: Column(\n${indent}    children: [\n${childrenBlock},\n${indent}    ],\n${indent}  ),\n${indent})`;
   },
 
-  emitCard(indent: string, children: string[]): string {
+  emitCard(node: UiNode, indent: string, children: string[]): string {
     const child = children[0] || 'SizedBox.shrink()';
-    return `Card(\n${indent}  child: ${child},\n${indent})`;
+    const a11y = node.accessibility;
+    const semantics = a11y?.label
+      ? `\n${indent}  semanticLabel: "${escapeDart(a11y.label)}",`
+      : '';
+    return `Card(\n${indent}  child: ${child},${semantics}\n${indent})`;
   },
 
   emitImage(node: UiNode, indent: string): string {
     const src = (node.properties.src as string) || '';
-    return `Image.network("${escapeDart(src)}")`;
+    const alt = (node.accessibility?.label || node.properties.alt as string || '') as string;
+    const semanticLabel = alt ? `\n${indent}  semanticLabel: "${escapeDart(alt)}",` : '';
+    return `Image.network("${escapeDart(src)}"${semanticLabel ? `,\n${indent}${semanticLabel}` : ''})`;
   },
 
-  emitTextField(indent: string): string {
-    return `TextField(\n${indent}  decoration: InputDecoration(\n${indent}    border: OutlineInputBorder(),\n${indent}  ),\n${indent})`;
+  emitTextField(node: UiNode, indent: string): string {
+    const a11y = node.accessibility;
+    const labelText = escapeDart(a11y?.label || 'Input');
+    const hintText = a11y?.hint ? `,\n${indent}    hintText: "${escapeDart(a11y.hint)}"` : '';
+    return `TextField(\n${indent}  decoration: InputDecoration(\n${indent}    labelText: "${labelText}"${hintText},\n${indent}    border: OutlineInputBorder(),\n${indent}  ),\n${indent})`;
   },
 
   emitAppBar(indent: string, title: string): string {
@@ -65,7 +77,7 @@ const flutterEmitter: NodeEmitter = {
     return `ListView(\n${indent}  children: [\n${children.join(',\n')},\n${indent}  ],\n${indent})`;
   },
 
-  emitForm(indent: string, children: string[]): string {
+  emitForm(node: UiNode, indent: string, children: string[]): string {
     return `Form(\n${indent}  child: Column(\n${indent}    children: [\n${children.join(',\n')},\n${indent}    ],\n${indent}  ),\n${indent})`;
   },
 
@@ -85,10 +97,11 @@ const flutterEmitter: NodeEmitter = {
   },
 };
 
-export function generate(node: UiNode, name: string = 'GeneratedView'): GenerateResult {
+export function generate(node: UiNode, name: string = 'GeneratedView', sourceComments: boolean = false): Result<GenerateResult> {
+  const bag = new DiagnosticBag();
   const start = performance.now();
 
-  const body = walkTree(node, flutterEmitter, 0);
+  const body = walkTree(node, flutterEmitter, 0, sourceComments);
   const lines = body.split('\n');
   const indentedBody = lines
     .map((line, i) => i === 0 ? line : `    ${line}`)
@@ -104,21 +117,23 @@ class ${name} extends StatelessWidget {
 }
 `;
 
-  return {
+  return bag.toResult({
     code,
     metadata: {
       platform: 'flutter' as PlatformTarget,
       nodes: countNodes(node),
       duration: Math.round(performance.now() - start),
     },
-  };
+  });
 }
 
-function formatProps(props: Record<string, unknown>, prefix: string): string {
+function formatProps(props: Record<string, unknown>, prefix: string, computed?: object): string {
   const lines: string[] = [];
   const i = prefix + '  ';
-  for (const [key, val] of Object.entries(props)) {
+  const merged = { ...props, ...computed };
+  for (const [key, val] of Object.entries(merged)) {
     if (key === 'value') continue;
+    if (val === undefined) continue;
     lines.push(`${i}${key}: ${formatValue(val)}`);
   }
   return lines.join(',\n');
@@ -132,5 +147,3 @@ function formatValue(val: unknown): string {
   }
   return String(val);
 }
-
-

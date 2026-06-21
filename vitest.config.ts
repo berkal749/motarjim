@@ -3,20 +3,21 @@ import { resolve } from 'path';
 
 export default defineConfig({
   resolve: {
-    alias: {
-      '@html-native/shared': resolve(__dirname, 'packages/shared/index.ts'),
-      '@html-native/parser': resolve(__dirname, 'packages/parser/index.ts'),
-      '@html-native/css-analyzer': resolve(__dirname, 'packages/css-analyzer/index.ts'),
-      '@html-native/semantic-analyzer': resolve(__dirname, 'packages/semantic-analyzer/index.ts'),
-      '@html-native/ir': resolve(__dirname, 'packages/ir/index.ts'),
-      '@html-native/optimizer': resolve(__dirname, 'packages/optimizer/index.ts'),
-      '@html-native/generator-flutter': resolve(__dirname, 'packages/generators/flutter/index.ts'),
-      '@html-native/generator-compose': resolve(__dirname, 'packages/generators/compose/index.ts'),
-      '@html-native/generator-core': resolve(__dirname, 'packages/generator-core/index.ts'),
-      '@html-native/generator-swiftui': resolve(__dirname, 'packages/generators/swiftui/index.ts'),
-      '@html-native/cli': resolve(__dirname, 'packages/cli/index.ts'),
-      '@html-native/semantic-analyzer/ai': resolve(__dirname, 'packages/semantic-analyzer/ai.ts'),
-    },
+    alias: [
+      { find: '@html-native/shared/diagnostics.js', replacement: resolve(__dirname, 'packages/shared/diagnostics.ts') },
+      { find: '@html-native/semantic-analyzer/ai', replacement: resolve(__dirname, 'packages/semantic-analyzer/ai.ts') },
+      { find: '@html-native/shared', replacement: resolve(__dirname, 'packages/shared/index.ts') },
+      { find: '@html-native/parser', replacement: resolve(__dirname, 'packages/parser/index.ts') },
+      { find: '@html-native/css-analyzer', replacement: resolve(__dirname, 'packages/css-analyzer/index.ts') },
+      { find: '@html-native/semantic-analyzer', replacement: resolve(__dirname, 'packages/semantic-analyzer/index.ts') },
+      { find: '@html-native/ir', replacement: resolve(__dirname, 'packages/ir/index.ts') },
+      { find: '@html-native/optimizer', replacement: resolve(__dirname, 'packages/optimizer/index.ts') },
+      { find: '@html-native/generator-flutter', replacement: resolve(__dirname, 'packages/generators/flutter/index.ts') },
+      { find: '@html-native/generator-compose', replacement: resolve(__dirname, 'packages/generators/compose/index.ts') },
+      { find: '@html-native/generator-core', replacement: resolve(__dirname, 'packages/generator-core/index.ts') },
+      { find: '@html-native/generator-swiftui', replacement: resolve(__dirname, 'packages/generators/swiftui/index.ts') },
+      { find: '@html-native/cli', replacement: resolve(__dirname, 'packages/cli/index.ts') },
+    ],
   },
   test: {
     globals: true,

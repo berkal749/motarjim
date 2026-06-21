@@ -1,8 +1,38 @@
-// CSS analyzer using PostCSS for proper parsing with media query support.
-// Maintains the same external API: parseCss(), matchSelector(), resolveStyles(), applyStyles().
-
 import postcss from 'postcss';
-import { CssStylesheet, CssRule, CssMediaQuery, HtmlNode, ResolvedStyles, StyledNode, ResponsiveHint } from '@html-native/shared';
+import type { CssStylesheet, CssRule, CssMediaQuery, HtmlNode, ResolvedStyles, StyledNode, ResponsiveHint, Result, Specificity } from '@html-native/shared';
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
+import { parseSelector, calculateSpecificity, matchAst, matchSelectorString, type ParentResolver } from './selector.js';
+import { cascadeStyles, createParentResolver, inheritMissingProperties, parseInlineStyles } from './cascade.js';
+
+// -- Re-export selector and cascade types/functions --
+
+export type { ParentResolver } from './selector.js';
+export {
+  parseSelector,
+  calculateSpecificity,
+  matchAst,
+  matchSelectorString,
+  parseSelectorList,
+} from './selector.js';
+export {
+  cascadeStyles,
+  createParentResolver,
+  inheritMissingProperties,
+  parseInlineStyles,
+  INHERITED_PROPERTIES,
+} from './cascade.js';
+export { computeStyle } from './computed-style.js';
+
+export { detectLayoutIntent, analyzeLayoutIntents, describeLayout, LAYOUT_PATTERNS } from './intent.js';
+export {
+  extractBreakpoints,
+  detectMobileFirst,
+  buildResponsiveMetadata,
+  detectResponsivePatterns,
+  classifyBreakpoint,
+  BREAKPOINT_LABELS,
+} from './responsive.js';
+export type { ResponsivePattern } from './responsive.js';
 
 function parseDeclarations(declNodes: postcss.ChildNode[]): CssRule['declarations'] {
   const declarations: CssRule['declarations'] = [];
@@ -11,7 +41,7 @@ function parseDeclarations(declNodes: postcss.ChildNode[]): CssRule['declaration
       declarations.push({
         property: decl.prop,
         value: decl.value.replace(/!important\s*$/, '').trim(),
-        important: decl.important,
+        important: decl.important === true,
       });
     }
   }
@@ -22,17 +52,25 @@ function parseSelectors(selector: string): string[] {
   return selector.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-export function parseCss(css: string): CssStylesheet {
+export function parseCss(css: string, file: string = 'styles.css'): Result<CssStylesheet> {
+  const bag = new DiagnosticBag();
   const result: CssStylesheet = { rules: [], mediaQueries: [] };
 
-  if (!css.trim()) return result;
+  if (!css.trim()) {
+    bag.addInfo('CSS_001', 'Empty CSS input, returning empty stylesheet', 'css');
+    return bag.toResult(result);
+  }
 
   let root: postcss.Root;
   try {
     root = postcss.parse(css);
-  } catch {
-    console.warn('Failed to parse CSS, returning empty stylesheet');
-    return result;
+  } catch (err) {
+    bag.addError('CSS_002', `Failed to parse CSS: ${(err as Error).message}`, 'css', {
+      file,
+      start: { line: 0, column: 0 },
+      end: { line: 0, column: 0 },
+    });
+    return bag.asResult();
   }
 
   for (const node of root.nodes) {
@@ -64,7 +102,7 @@ export function parseCss(css: string): CssStylesheet {
     }
   }
 
-  return result;
+  return bag.toResult(result);
 }
 
 export function extractResponsiveHints(stylesheet: CssStylesheet): ResponsiveHint[] {
@@ -104,42 +142,55 @@ export function extractResponsiveHints(stylesheet: CssStylesheet): ResponsiveHin
   return hints;
 }
 
+// -- Backward-compatible wrapper using new selector engine --
+
 export function matchSelector(selector: string, node: HtmlNode): boolean {
-  if (selector === '*') return true;
-  if (selector.startsWith('.')) {
-    const cls = selector.slice(1);
-    const classAttr = node.attributes.find(a => a.name === 'class');
-    return classAttr?.value.split(/\s+/).includes(cls) || false;
-  }
-  if (selector.startsWith('#')) {
-    const id = selector.slice(1);
-    const idAttr = node.attributes.find(a => a.name === 'id');
-    return idAttr?.value === id || false;
-  }
-  return selector === node.tagName;
+  return matchSelectorString(selector, node);
 }
 
-export function resolveStyles(node: HtmlNode, stylesheet: CssStylesheet): ResolvedStyles {
-  const styles: ResolvedStyles = {};
-  for (const rule of stylesheet.rules) {
-    for (const selector of rule.selectors) {
-      if (matchSelector(selector, node)) {
-        for (const decl of rule.declarations) {
-          styles[decl.property] = decl.value;
-        }
-      }
-    }
-  }
-  return styles;
+// -- Cascade-based style resolution --
+
+export function resolveStyles(
+  node: HtmlNode,
+  stylesheet: CssStylesheet,
+  getParent?: ParentResolver,
+  parentStyles?: ResolvedStyles | null,
+): ResolvedStyles {
+  const resolver = getParent ?? (() => null);
+  return cascadeStyles(node, stylesheet, resolver, parentStyles ?? null);
 }
 
-export function applyStyles(nodes: HtmlNode[], stylesheet: CssStylesheet): StyledNode[] {
-  function apply(nodes: HtmlNode[]): StyledNode[] {
-    return nodes.map(node => ({
-      node,
-      styles: resolveStyles(node, stylesheet),
-      children: apply(node.children),
-    }));
+// -- Apply styles using cascade with inheritance --
+
+export function applyStyles(nodes: HtmlNode[], stylesheet: CssStylesheet, file: string = 'input.html'): Result<StyledNode[]> {
+  const bag = new DiagnosticBag();
+
+  const getParent = createParentResolver(nodes);
+
+  function apply(nodes: HtmlNode[], parentStyles: ResolvedStyles | null): StyledNode[] {
+    return nodes.map(node => {
+      const styles = cascadeStyles(node, stylesheet, getParent, parentStyles);
+      return {
+        node,
+        styles,
+        children: apply(node.children, styles),
+      };
+    });
   }
-  return apply(nodes);
+
+  if (stylesheet.rules.length === 0 && stylesheet.mediaQueries.length === 0) {
+    bag.addInfo('CSS_003', 'No CSS rules to apply, nodes will be unstyled', 'css');
+  }
+
+  const styled = apply(nodes, null);
+  return bag.toResult(styled);
 }
+export {
+  cssToLayoutNode,
+  cssToFlexLayout,
+  cssToBoxLayout,
+  cssToStackLayout,
+  cssToScrollLayout,
+  resolveChildLayout,
+} from './layout-bridge-v2.js';
+export type { CssComputedLayoutStyle, SemanticLayoutInput, LayoutBridgeResult } from './layout-bridge-v2.js';

@@ -1,0 +1,13 @@
+{
+  "name": "@html-native/ir-v2",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@html-native/shared": "0.1.0"
+  }
+}

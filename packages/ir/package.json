@@ -8,6 +8,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@html-native/shared": "0.1.0"
+    "@html-native/shared": "0.1.0",
+    "@html-native/css-analyzer": "0.1.0",
+    "zod": "^3.24.0"
   }
 }
