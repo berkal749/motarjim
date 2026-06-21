@@ -114,6 +114,60 @@ export interface ResolvedStyles {
   [property: string]: string;
 }
 
+// -- Computed Style (typed, normalized style representation) --
+
+export interface ComputedStyle {
+  // Box model
+  marginTop?: number;
+  marginRight?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  paddingTop?: number;
+  paddingRight?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  borderRadius?: number;
+  boxSizing?: string;
+
+  // Flexbox
+  display?: string;
+  flexDirection?: string;
+  flexWrap?: string;
+  justifyContent?: string;
+  alignItems?: string;
+  alignContent?: string;
+  gap?: number;
+  flex?: string;
+
+  // Typography
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number;
+  fontStyle?: string;
+  lineHeight?: number;
+  textAlign?: string;
+  textDecoration?: string;
+  textTransform?: string;
+  color?: string;
+  letterSpacing?: number;
+
+  // Color / Background
+  backgroundColor?: string;
+  background?: string;
+  opacity?: number;
+
+  // Sizing
+  width?: string;
+  height?: string;
+  minWidth?: string;
+  maxWidth?: string;
+  minHeight?: string;
+  maxHeight?: string;
+  position?: string;
+}
+
 export interface StyledNode {
   node: HtmlNode;
   styles: ResolvedStyles;
@@ -168,6 +222,7 @@ export interface UiNode {
   properties: Record<string, unknown>;
   children: UiNode[];
   styles?: ResolvedStyles;
+  computed?: ComputedStyle;
   sourceHtmlTag?: string;
   sourceSpan?: SourceSpan;
   originalNodeId?: string;

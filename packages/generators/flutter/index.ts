@@ -30,7 +30,7 @@ const flutterEmitter: NodeEmitter = {
   },
 
   emitContainer(node: UiNode, indent: string, children: string[]): string {
-    const props = formatProps(node.properties, indent);
+    const props = formatProps(node.properties, indent, node.computed);
     if (!children.length) {
       return `${indent}Container(${props ? `\n${props}\n${indent}` : ''})`;
     }
@@ -114,11 +114,13 @@ class ${name} extends StatelessWidget {
   });
 }
 
-function formatProps(props: Record<string, unknown>, prefix: string): string {
+function formatProps(props: Record<string, unknown>, prefix: string, computed?: Record<string, unknown>): string {
   const lines: string[] = [];
   const i = prefix + '  ';
-  for (const [key, val] of Object.entries(props)) {
+  const merged = { ...props, ...computed };
+  for (const [key, val] of Object.entries(merged)) {
     if (key === 'value') continue;
+    if (val === undefined) continue;
     lines.push(`${i}${key}: ${formatValue(val)}`);
   }
   return lines.join(',\n');

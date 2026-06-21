@@ -21,6 +21,7 @@ export {
   parseInlineStyles,
   INHERITED_PROPERTIES,
 } from './cascade.js';
+export { computeStyle } from './computed-style.js';
 
 export { detectLayoutIntent, analyzeLayoutIntents, describeLayout, LAYOUT_PATTERNS } from './intent.js';
 export {

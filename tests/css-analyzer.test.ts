@@ -14,6 +14,7 @@ import {
   createParentResolver,
   inheritMissingProperties,
   INHERITED_PROPERTIES,
+  computeStyle,
 } from '../packages/css-analyzer/index.js';
 
 function getCss(css: string) {
@@ -494,6 +495,140 @@ describe('CSS Analyzer', () => {
       expect(INHERITED_PROPERTIES.has('font-size')).toBe(true);
       expect(INHERITED_PROPERTIES.has('font-family')).toBe(true);
       expect(INHERITED_PROPERTIES.has('border')).toBe(false);
+    });
+  });
+
+  describe('ComputedStyle', () => {
+    it('converts px values to numbers', () => {
+      const cs = computeStyle({ 'font-size': '24px', 'gap': '16px' });
+      expect(cs.fontSize).toBe(24);
+      expect(cs.gap).toBe(16);
+    });
+
+    it('expands 1-value margin shorthand', () => {
+      const cs = computeStyle({ 'margin': '10px' });
+      expect(cs.marginTop).toBe(10);
+      expect(cs.marginRight).toBe(10);
+      expect(cs.marginBottom).toBe(10);
+      expect(cs.marginLeft).toBe(10);
+    });
+
+    it('expands 2-value margin shorthand', () => {
+      const cs = computeStyle({ 'margin': '10px 20px' });
+      expect(cs.marginTop).toBe(10);
+      expect(cs.marginRight).toBe(20);
+      expect(cs.marginBottom).toBe(10);
+      expect(cs.marginLeft).toBe(20);
+    });
+
+    it('expands 3-value margin shorthand', () => {
+      const cs = computeStyle({ 'margin': '10px 20px 30px' });
+      expect(cs.marginTop).toBe(10);
+      expect(cs.marginRight).toBe(20);
+      expect(cs.marginBottom).toBe(30);
+      expect(cs.marginLeft).toBe(20);
+    });
+
+    it('expands 4-value margin shorthand', () => {
+      const cs = computeStyle({ 'margin': '1px 2px 3px 4px' });
+      expect(cs.marginTop).toBe(1);
+      expect(cs.marginRight).toBe(2);
+      expect(cs.marginBottom).toBe(3);
+      expect(cs.marginLeft).toBe(4);
+    });
+
+    it('expands padding shorthand', () => {
+      const cs = computeStyle({ 'padding': '8px 16px' });
+      expect(cs.paddingTop).toBe(8);
+      expect(cs.paddingRight).toBe(16);
+      expect(cs.paddingBottom).toBe(8);
+      expect(cs.paddingLeft).toBe(16);
+    });
+
+    it('individual margin sides override shorthand', () => {
+      const cs = computeStyle({ 'margin': '10px', 'margin-top': '20px' });
+      expect(cs.marginTop).toBe(20);
+      expect(cs.marginRight).toBe(10);
+    });
+
+    it('passes through string values for sizing', () => {
+      const cs = computeStyle({ 'width': '100%', 'height': 'auto', 'min-width': '320px' });
+      expect(cs.width).toBe('100%');
+      expect(cs.height).toBe('auto');
+      expect(cs.minWidth).toBe('320px');
+    });
+
+    it('parses numeric font-weight', () => {
+      const cs = computeStyle({ 'font-weight': '700' });
+      expect(cs.fontWeight).toBe(700);
+    });
+
+    it('parses opacity as float', () => {
+      const cs = computeStyle({ 'opacity': '0.5' });
+      expect(cs.opacity).toBe(0.5);
+    });
+
+    it('passes through color values', () => {
+      const cs = computeStyle({ 'color': '#333', 'background': 'white', 'background-color': '#eee' });
+      expect(cs.color).toBe('#333');
+      expect(cs.background).toBe('white');
+      expect(cs.backgroundColor).toBe('#eee');
+    });
+
+    it('parses flexbox properties', () => {
+      const cs = computeStyle({
+        'display': 'flex',
+        'flex-direction': 'column',
+        'justify-content': 'center',
+        'align-items': 'stretch',
+        'flex-wrap': 'wrap',
+      });
+      expect(cs.display).toBe('flex');
+      expect(cs.flexDirection).toBe('column');
+      expect(cs.justifyContent).toBe('center');
+      expect(cs.alignItems).toBe('stretch');
+      expect(cs.flexWrap).toBe('wrap');
+    });
+
+    it('parses border properties', () => {
+      const cs = computeStyle({
+        'border-width': '2px',
+        'border-color': 'black',
+        'border-radius': '8px',
+        'box-sizing': 'border-box',
+      });
+      expect(cs.borderWidth).toBe(2);
+      expect(cs.borderColor).toBe('black');
+      expect(cs.borderRadius).toBe(8);
+      expect(cs.boxSizing).toBe('border-box');
+    });
+
+    it('handles empty styles', () => {
+      const cs = computeStyle({});
+      expect(Object.keys(cs).length).toBe(0);
+    });
+
+    it('parses font-style and text-align', () => {
+      const cs = computeStyle({ 'font-style': 'italic', 'text-align': 'center' });
+      expect(cs.fontStyle).toBe('italic');
+      expect(cs.textAlign).toBe('center');
+    });
+
+    it('parses line-height', () => {
+      const cs = computeStyle({ 'line-height': '1.5', 'letter-spacing': '0.5px' });
+      expect(cs.lineHeight).toBe(1.5);
+      expect(cs.letterSpacing).toBe(0.5);
+    });
+
+    it('handles bare numeric values (no unit)', () => {
+      const cs = computeStyle({ 'opacity': '1', 'font-weight': '400' });
+      expect(cs.opacity).toBe(1);
+      expect(cs.fontWeight).toBe(400);
+    });
+
+    it('parses position property', () => {
+      const cs = computeStyle({ 'position': 'absolute' });
+      expect(cs.position).toBe('absolute');
     });
   });
 });

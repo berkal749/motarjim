@@ -1,5 +1,6 @@
 import type { UiNode, StyledNode, SemanticHint, Result, SourceSpan } from '@html-native/shared';
 import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
+import { computeStyle } from '@html-native/css-analyzer';
 
 export { enrichWithIntent, enrichWithIntentSync } from './ai-intent.js';
 export type { AIIntentInferenceConfig } from './ai-intent.js';
@@ -12,8 +13,9 @@ export function createIrNode(
   sourceSpan?: SourceSpan,
   sourceHtmlTag?: string,
   originalNodeId?: string,
+  computed?: UiNode['computed'],
 ): UiNode {
-  return { type, properties, children, value, sourceSpan, sourceHtmlTag, originalNodeId };
+  return { type, properties, children, value, sourceSpan, sourceHtmlTag, originalNodeId, computed };
 }
 
 export function styledNodeToIr(styled: StyledNode, hints: SemanticHint[] = []): Result<UiNode> {
@@ -37,6 +39,8 @@ export function styledNodeToIr(styled: StyledNode, hints: SemanticHint[] = []): 
   }
 
   Object.assign(props, extractProps(styled));
+
+  const computed = computeStyle(styled.styles);
 
   const nodeValue = (props.value as string) || undefined;
   delete props.value;
@@ -73,6 +77,7 @@ export function styledNodeToIr(styled: StyledNode, hints: SemanticHint[] = []): 
     styled.node.sourceSpan,
     styled.node.tagName,
     styled.node.nodeId,
+    computed,
   );
   return bag.toResult(node);
 }
