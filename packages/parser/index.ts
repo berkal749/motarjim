@@ -13,7 +13,16 @@ function convertAttrs(attrs: any[] | undefined): HtmlAttribute[] {
   return attrs.map((a: any) => ({ name: a.name, value: a.value ?? '' }));
 }
 
-function walkTree(node: any, bag: DiagnosticBag): HtmlNode | null {
+function toSourceSpan(sc: any, file: string): import('@html-native/shared').SourceSpan | undefined {
+  if (!sc) return undefined;
+  return {
+    file,
+    start: { line: sc.startLine, column: sc.startCol },
+    end: { line: sc.endLine, column: sc.endCol },
+  };
+}
+
+function walkTree(node: any, bag: DiagnosticBag, file: string): HtmlNode | null {
   const tagName = node.tagName?.toLowerCase() || '';
 
   if (!tagName) return null;
@@ -23,12 +32,7 @@ function walkTree(node: any, bag: DiagnosticBag): HtmlNode | null {
     tagName,
     attributes: convertAttrs(node.attrs),
     children: [],
-    sourceLocation: node.sourceCodeLocation
-      ? {
-          line: node.sourceCodeLocation.startLine,
-          col: node.sourceCodeLocation.startCol,
-        }
-      : undefined,
+    sourceSpan: toSourceSpan(node.sourceCodeLocation, file),
   };
 
   const childNodes = (node as any).childNodes || [];
@@ -42,10 +46,11 @@ function walkTree(node: any, bag: DiagnosticBag): HtmlNode | null {
           attributes: [],
           children: [],
           value: text,
+          sourceSpan: toSourceSpan(child.sourceCodeLocation, file),
         });
       }
     } else if ((child as any).tagName) {
-      const childNode = walkTree(child, bag);
+      const childNode = walkTree(child, bag, file);
       if (childNode) {
         htmlNode.children.push(childNode);
       }
@@ -86,7 +91,7 @@ export function parseHtml(html: string, file: string = 'input.html'): Result<Htm
     const bodyChildren = (body as any).childNodes || [];
     for (const child of bodyChildren) {
       if (child.tagName) {
-        const node = walkTree(child, bag);
+        const node = walkTree(child, bag, file);
         if (node) children.push(node);
       }
     }
@@ -129,10 +134,11 @@ export function parseFragment(html: string, file: string = 'fragment.html'): Res
           attributes: [],
           children: [],
           value: text,
+          sourceSpan: toSourceSpan(child.sourceCodeLocation, file),
         });
       }
     } else if ((child as any).tagName) {
-      const node = walkTree(child, bag);
+      const node = walkTree(child, bag, file);
       if (node) nodes.push(node);
     }
   }

@@ -46,12 +46,7 @@ export interface HtmlNode {
   attributes: HtmlAttribute[];
   children: HtmlNode[];
   value?: string;
-  sourceLocation?: SourceLocation;
-}
-
-export interface SourceLocation {
-  line: number;
-  col: number;
+  sourceSpan?: SourceSpan;
 }
 
 // -- CSS Types --
@@ -65,7 +60,7 @@ export interface CssStyleDeclaration {
 export interface CssRule {
   selectors: string[];
   declarations: CssStyleDeclaration[];
-  sourceLocation?: SourceLocation;
+  sourceSpan?: SourceSpan;
 }
 
 export interface CssMediaQuery {
@@ -139,6 +134,8 @@ export interface UiNode {
   children: UiNode[];
   styles?: ResolvedStyles;
   sourceHtmlTag?: string;
+  sourceSpan?: SourceSpan;
+  originalNodeId?: string;
   value?: string;
   semanticIntent?: SemanticIntent;
   responsiveMetadata?: ResponsiveMetadata;
