@@ -114,7 +114,7 @@ class ${name} extends StatelessWidget {
   });
 }
 
-function formatProps(props: Record<string, unknown>, prefix: string, computed?: Record<string, unknown>): string {
+function formatProps(props: Record<string, unknown>, prefix: string, computed?: object): string {
   const lines: string[] = [];
   const i = prefix + '  ';
   const merged = { ...props, ...computed };

@@ -7,6 +7,7 @@
 // Full pipeline:  HTML + CSS → parse → cascade → IrNode
 // ============================================================
 
+import type { IrNode } from '@html-native/shared/ir-v2.js';
 import { parseHtml } from '@html-native/parser';
 import { parseCss, applyStyles, extractResponsiveHints } from '@html-native/css-analyzer';
 import { styledNodeToIrV2 } from './index.js';
@@ -100,15 +101,13 @@ const responsiveHints = extractResponsiveHints(cssParsed.value);
 
 const rvs = responsiveHints.map(h => ({
   breakpoint: { condition: h.condition, value: h.value },
-  layoutOverrides: {} as const,
-  styleOverrides: {} as const,
+  layoutOverrides: {},
+  styleOverrides: {},
 }));
 
 const irTree = styled.value.map(sn => styledNodeToIrV2(sn, rvs));
 
 // ─── Pretty-print ────────────────────────────────────────────
-
-import type { IrNode } from '@html-native/shared/ir-v2.js';
 
 function inspect(node: IrNode, depth = 0): string {
   const pad = '  '.repeat(depth);
@@ -131,10 +130,6 @@ function inspect(node: IrNode, depth = 0): string {
       line += `  href="${sem.href}"`; break;
     case 'generic':
       line += '  (generic container)'; break;
-    case 'card':
-      line += `  elevation=${sem.elevation}`; break;
-    case 'list':
-      line += `  ordered=${sem.ordered}  style=${sem.listStyle}`; break;
   }
 
   // Layout details

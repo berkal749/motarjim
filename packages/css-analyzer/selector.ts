@@ -29,7 +29,7 @@ function readString(s: string, i: number): number {
   return i;
 }
 
-function parseAttribute(s: string, i: number): { attr: SelectorSimple; end: number } {
+function parseAttribute(s: string, i: number): { simple: SelectorSimple; end: number } {
   i++;
   i = skipWhitespace(s, i);
   const nameStart = i;
@@ -72,7 +72,7 @@ function parseAttribute(s: string, i: number): { attr: SelectorSimple; end: numb
   };
 }
 
-function parsePseudo(s: string, i: number): { pseudo: SelectorSimple; end: number } {
+function parsePseudo(s: string, i: number): { simple: SelectorSimple; end: number } {
   i++;
   if (s[i] === ':') i++;
   const nameStart = i;

@@ -185,3 +185,12 @@ export function applyStyles(nodes: HtmlNode[], stylesheet: CssStylesheet, file: 
   const styled = apply(nodes, null);
   return bag.toResult(styled);
 }
+export {
+  cssToLayoutNode,
+  cssToFlexLayout,
+  cssToBoxLayout,
+  cssToStackLayout,
+  cssToScrollLayout,
+  resolveChildLayout,
+} from './layout-bridge-v2.js';
+export type { CssComputedLayoutStyle, SemanticLayoutInput, LayoutBridgeResult } from './layout-bridge-v2.js';

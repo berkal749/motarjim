@@ -332,3 +332,11 @@ export interface AiDetectorConfig {
 
 
 
+
+// -- Layout System (Motarjim IR v2) --
+export * from './alignment.js';
+export * from './layout-constraints.js';
+export * from './layout-types.js';
+export * from './layout-engine.js';
+export * from './layout-mapping.js';
+export * from './layout-example.js';
