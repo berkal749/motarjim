@@ -1,7 +1,6 @@
-import { UiNode, GenerateResult, PlatformTarget } from '@html-native/shared';
+import type { UiNode, GenerateResult, PlatformTarget, Result } from '@html-native/shared';
 import { countNodes, escapeString, NodeEmitter, walkTree } from '@html-native/generator-core';
-
-// SwiftUI generator: wraps view trees in a struct conforming to the View protocol.
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
 
 const swiftuiEmitter: NodeEmitter = {
   indentUnit: '    ',
@@ -75,7 +74,8 @@ const swiftuiEmitter: NodeEmitter = {
   },
 };
 
-export function generate(node: UiNode, name: string = 'GeneratedView'): GenerateResult {
+export function generate(node: UiNode, name: string = 'GeneratedView'): Result<GenerateResult> {
+  const bag = new DiagnosticBag();
   const start = performance.now();
 
   const body = walkTree(node, swiftuiEmitter, 0);
@@ -93,14 +93,12 @@ ${indentedBody}
 }
 `;
 
-  return {
+  return bag.toResult({
     code,
     metadata: {
       platform: 'swiftui' as PlatformTarget,
       nodes: countNodes(node),
       duration: Math.round(performance.now() - start),
     },
-  };
+  });
 }
-
-

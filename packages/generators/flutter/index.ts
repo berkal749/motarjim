@@ -1,7 +1,6 @@
-import { UiNode, GenerateResult, PlatformTarget } from '@html-native/shared';
+import type { UiNode, GenerateResult, PlatformTarget, Result } from '@html-native/shared';
 import { countNodes, escapeStringExtra, NodeEmitter, walkTree } from '@html-native/generator-core';
-
-// Flutter generator: wraps widget trees in a StatelessWidget with material.dart imports.
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
 
 function escapeDart(s: string): string {
   return escapeStringExtra(s, { '$': '\\$' });
@@ -85,7 +84,8 @@ const flutterEmitter: NodeEmitter = {
   },
 };
 
-export function generate(node: UiNode, name: string = 'GeneratedView'): GenerateResult {
+export function generate(node: UiNode, name: string = 'GeneratedView'): Result<GenerateResult> {
+  const bag = new DiagnosticBag();
   const start = performance.now();
 
   const body = walkTree(node, flutterEmitter, 0);
@@ -104,14 +104,14 @@ class ${name} extends StatelessWidget {
 }
 `;
 
-  return {
+  return bag.toResult({
     code,
     metadata: {
       platform: 'flutter' as PlatformTarget,
       nodes: countNodes(node),
       duration: Math.round(performance.now() - start),
     },
-  };
+  });
 }
 
 function formatProps(props: Record<string, unknown>, prefix: string): string {
@@ -132,5 +132,3 @@ function formatValue(val: unknown): string {
   }
   return String(val);
 }
-
-

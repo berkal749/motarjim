@@ -1,7 +1,6 @@
-import { UiNode, GenerateResult, PlatformTarget } from '@html-native/shared';
+import type { UiNode, GenerateResult, PlatformTarget, Result } from '@html-native/shared';
 import { countNodes, escapeString, NodeEmitter, walkTree } from '@html-native/generator-core';
-
-// Compose generator: wraps composable trees in a @Composable function with Material3 imports.
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
 
 const composeEmitter: NodeEmitter = {
   indentUnit: '    ',
@@ -77,7 +76,8 @@ const composeEmitter: NodeEmitter = {
   },
 };
 
-export function generate(node: UiNode, name: string = 'GeneratedView'): GenerateResult {
+export function generate(node: UiNode, name: string = 'GeneratedView'): Result<GenerateResult> {
+  const bag = new DiagnosticBag();
   const start = performance.now();
 
   const body = walkTree(node, composeEmitter, 0);
@@ -97,14 +97,12 @@ ${indentedBody}
 }
 `;
 
-  return {
+  return bag.toResult({
     code,
     metadata: {
       platform: 'compose' as PlatformTarget,
       nodes: countNodes(node),
       duration: Math.round(performance.now() - start),
     },
-  };
+  });
 }
-
-
