@@ -5,12 +5,8 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun GeneratedView() {
-    Card(
-        modifier = Modifier
-    ) {
+    Column {
         Text(text = "Hello World HTML and CSS in a single file.")
+        Text(text = "Get Started")
     }
-        .semantics {
-            contentDescription = "Hello World HTML and CSS in a single file. Get Started"
-        }
 }

@@ -5,7 +5,12 @@ struct GeneratedView: View {
     VStack {
         .navigationTitle("MyApp")
         VStack {
-            .navigationTitle("Dashboard")
+            VStack {
+                Text("Dashboard")
+                VStack {
+                    Color.clear
+                }
+            }
             VStack {
                 VStack {
                     Text("Revenue $12,345 +12%")

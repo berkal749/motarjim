@@ -11,8 +11,38 @@ class GeneratedView extends StatelessWidget {
       ),
     Column(
         children: [
-    AppBar(
-          title: Text("Dashboard"),
+    Column(
+          children: [
+    Text("Dashboard"),
+    Container(
+            padding: 0,
+            margin: 0,
+            color: "#666",
+            marginTop: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            marginLeft: 0,
+            paddingTop: 0,
+            paddingRight: 0,
+            paddingBottom: 0,
+            paddingLeft: 0,
+            boxSizing: "border-box",
+            child:         Container(
+              padding: 0,
+              margin: 0,
+              color: "#666",
+              marginTop: 0,
+              marginRight: 0,
+              marginBottom: 0,
+              marginLeft: 0,
+              paddingTop: 0,
+              paddingRight: 0,
+              paddingBottom: 0,
+              paddingLeft: 0,
+              boxSizing: "border-box"
+            ),
+          ),
+          ],
         ),
     Column(
           children: [

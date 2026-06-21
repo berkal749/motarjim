@@ -1,9 +1,12 @@
-import type { UiNode, StyledNode, SemanticHint, AccessibilityInfo, Result, SourceSpan } from '@html-native/shared';
+import type { UiNode, StyledNode, SemanticHint, NormalizedHint, AccessibilityInfo, Result, SourceSpan } from '@html-native/shared';
 import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
 import { computeStyle } from '@html-native/css-analyzer';
 
 export { enrichWithIntent, enrichWithIntentSync } from './ai-intent.js';
 export type { AIIntentInferenceConfig } from './ai-intent.js';
+
+// Accept both legacy SemanticHint and new NormalizedHint
+type AnyHint = SemanticHint | NormalizedHint;
 
 export function createIrNode(
   type: UiNode['type'],
@@ -21,7 +24,7 @@ export function createIrNode(
 
 export function styledNodeToIr(
   styled: StyledNode,
-  hints: SemanticHint[] = [],
+  hints: AnyHint[] = [],
   accessibilityMap?: Map<string, AccessibilityInfo>,
 ): Result<UiNode> {
   const bag = new DiagnosticBag();

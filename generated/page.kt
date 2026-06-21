@@ -10,7 +10,7 @@ fun GeneratedView() {
             title = { Text("Title") }
         )
         Column {
-            Box(modifier = Modifier) {
+            Column {
                 Text(text = "Welcome to My App A modern application built with the best technologies.")
                 Button(
                     onClick = { }

@@ -11,30 +11,15 @@ class GeneratedView extends StatelessWidget {
       ),
     Column(
         children: [
-    Container(
-          padding: 0,
-          margin: 0,
-          textAlign: "center",
-          color: "white",
-          marginTop: 0,
-          marginRight: 0,
-          marginBottom: 0,
-          marginLeft: 0,
-          paddingTop: 0,
-          paddingRight: 0,
-          paddingBottom: 0,
-          paddingLeft: 0,
-          boxSizing: "border-box",
-          child: Column(
-            children: [
+    Column(
+          children: [
     Text("Welcome to My App A modern application built with the best technologies."),
     ElevatedButton(
             onPressed: () {},
             semanticLabel: "Get Started",
             child: Text("Get Started"),
           ),
-            ],
-          ),
+          ],
         ),
         ],
       ),

@@ -256,6 +256,56 @@ export interface SemanticHint {
   reason: string;
 }
 
+// -- Semantic Normalization types --
+
+export interface SemanticSignal {
+  type: 'tag' | 'class' | 'style' | 'structure' | 'text' | 'attribute' | 'position' | 'childCount';
+  name: string;
+  value: string | number | boolean;
+  weight: number;
+}
+
+export interface SemanticRule {
+  id: string;
+  componentType: UiNodeType;
+  description: string;
+  signals: SemanticRuleSignal[];
+  minScore: number;
+  priority: number;
+}
+
+export interface SemanticRuleSignal {
+  type: SemanticSignal['type'];
+  name: string;
+  value?: string | number | boolean;
+  valueMatch?: 'exact' | 'includes' | 'regex' | 'gt' | 'lt' | 'exists' | 'not';
+  weight: number;
+}
+
+export interface NormalizedHint {
+  type: UiNodeType;
+  confidence: number;
+  totalScore: number;
+  signals: SemanticSignal[];
+  node: HtmlNode;
+  reason: string;
+}
+
+export interface ComponentCandidate {
+  name: string;
+  type: UiNodeType;
+  patternSignature: string;
+  occurrences: number;
+  nodeIds: string[];
+  confidence: number;
+  props: Record<string, unknown>;
+}
+
+export interface NormalizationResult {
+  hints: NormalizedHint[];
+  candidates: ComponentCandidate[];
+}
+
 // -- Responsive hints for media queries --
 
 export interface ResponsiveHint {

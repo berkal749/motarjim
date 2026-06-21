@@ -11,40 +11,50 @@ class GeneratedView extends StatelessWidget {
       ),
     Column(
         children: [
-    Container(
-          padding: 0,
-          margin: 0,
-          textAlign: "center",
-          color: "white",
-          marginTop: 0,
-          marginRight: 0,
-          marginBottom: 0,
-          marginLeft: 0,
-          paddingTop: 0,
-          paddingRight: 0,
-          paddingBottom: 0,
-          paddingLeft: 0,
-          boxSizing: "border-box",
-          child: Column(
-            children: [
+    Column(
+          children: [
     Text("Premium Wireless Headphones Experience crystal-clear audio with noise cancellation technology."),
     ElevatedButton(
             onPressed: () {},
             semanticLabel: "Shop Now",
             child: Text("Shop Now"),
           ),
-            ],
-          ),
+          ],
         ),
         ],
       ),
     Column(
         children: [
-    Card(
-          child: Image.network("headphones.jpg",
+    Column(
+          children: [
+    Image.network("headphones.jpg",
           
             semanticLabel: "Wireless Headphones",),
-          semanticLabel: "Wireless Headphones \$99.99 High-quality wireless audio with 30-hour battery life. Add to Cart",
+    Text("Wireless Headphones \$99.99 High-quality wireless audio with 30-hour battery life."),
+    ElevatedButton(
+            onPressed: () {},
+            semanticLabel: "Add to Cart",
+            child: Text("Add to Cart"),
+          ),
+    Image.network("speaker.jpg",
+          
+            semanticLabel: "Bluetooth Speaker",),
+    Text("Bluetooth Speaker \$49.99 Portable speaker with rich bass and 360-degree sound."),
+    ElevatedButton(
+            onPressed: () {},
+            semanticLabel: "Add to Cart",
+            child: Text("Add to Cart"),
+          ),
+    Image.network("earbuds.jpg",
+          
+            semanticLabel: "Wireless Earbuds",),
+    Text("Wireless Earbuds \$79.99 Compact earbuds with active noise cancellation."),
+    ElevatedButton(
+            onPressed: () {},
+            semanticLabel: "Add to Cart",
+            child: Text("Add to Cart"),
+          ),
+          ],
         ),
         ],
       ),

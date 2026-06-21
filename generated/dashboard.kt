@@ -10,9 +10,12 @@ fun GeneratedView() {
             title = { Text("MyApp") }
         )
         Column {
-            TopAppBar(
-                title = { Text("Dashboard") }
-            )
+            Column {
+                Text(text = "Dashboard")
+                Box(modifier = Modifier) {
+                    Box(modifier = Modifier)
+                }
+            }
             Column {
                 Card(
                     modifier = Modifier

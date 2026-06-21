@@ -10,13 +10,13 @@
 // Must never generate platform code — only semantic hints.
 
 import { z } from 'zod';
-import type { StyledNode, SemanticHint, HtmlNode, AiDetectorConfig } from '@html-native/shared';
-import { detectSemantics, type SemanticDetector } from './index.js';
+import type { StyledNode, SemanticHint, HtmlNode, NormalizedHint, AiDetectorConfig } from '@html-native/shared';
+import { normalizeSemantics, type SemanticDetector } from './index.js';
 
-function unwrapDetectSemantics(nodes: StyledNode[]): SemanticHint[] {
-  const result = detectSemantics(nodes);
+function unwrapNormalizeSemantics(nodes: StyledNode[]): NormalizedHint[] {
+  const result = normalizeSemantics(nodes);
   if (!result.ok) return [];
-  return result.value;
+  return result.value.hints;
 }
 
 // -- Zod Schemas for Structured Output Validation --
@@ -201,7 +201,7 @@ function splitIntoBatches<T>(items: T[], batchSize: number): T[][] {
 
 // -- AI Response Parsing and Validation --
 
-function parseAiResponse(text: string, validNodeIds: Set<string>): SemanticHint[] {
+function parseAiResponse(text: string, validNodeIds: Set<string>): NormalizedHint[] {
   try {
     const parsed = JSON.parse(text);
     const { components } = AiResponseSchema.parse(parsed);
@@ -211,6 +211,8 @@ function parseAiResponse(text: string, validNodeIds: Set<string>): SemanticHint[
       .map(c => ({
         type: c.type as any,
         confidence: c.confidence,
+        totalScore: c.confidence,
+        signals: [],
         node: { nodeId: c.nodeId, tagName: 'div', attributes: [], children: [] } as HtmlNode,
         reason: c.reasoning || `AI detected ${c.type}`,
       }));
@@ -221,7 +223,7 @@ function parseAiResponse(text: string, validNodeIds: Set<string>): SemanticHint[
 
 // -- Hint Merge Strategy --
 
-function mergeHints(aiHints: SemanticHint[], ruleHints: SemanticHint[]): SemanticHint[] {
+function mergeHints(aiHints: NormalizedHint[], ruleHints: NormalizedHint[]): NormalizedHint[] {
   const combined = [...aiHints, ...ruleHints];
   combined.sort((a, b) => b.confidence - a.confidence);
 
@@ -239,7 +241,7 @@ function mergeHints(aiHints: SemanticHint[], ruleHints: SemanticHint[]): Semanti
 export function createAiDetector(config?: AiDetectorConfig): SemanticDetector {
   const cfg = resolveConfig(config);
 
-  return async (nodes: StyledNode[]): Promise<SemanticHint[]> => {
+  return async (nodes: StyledNode[]): Promise<NormalizedHint[]> => {
     const serialized = serializeStyledNode(nodes);
     const validNodeIds = new Set<string>();
     function collectIds(nodes: SerializedNode[]): void {
@@ -252,7 +254,7 @@ export function createAiDetector(config?: AiDetectorConfig): SemanticDetector {
 
     try {
       const batches = splitIntoBatches(serialized, cfg.batchSize);
-      const allAiHints: SemanticHint[] = [];
+      const allAiHints: NormalizedHint[] = [];
 
       for (const batch of batches) {
         const batchNodeIds = new Set<string>();
@@ -305,7 +307,7 @@ export function createAiDetector(config?: AiDetectorConfig): SemanticDetector {
         allAiHints.push(...batchHints);
       }
 
-      const ruleHints = unwrapDetectSemantics(nodes);
+      const ruleHints = unwrapNormalizeSemantics(nodes);
 
       if (allAiHints.length === 0) {
         return ruleHints;
@@ -316,7 +318,7 @@ export function createAiDetector(config?: AiDetectorConfig): SemanticDetector {
       console.warn(
         `Ollama unavailable (${(err as Error).message}), falling back to rule-based detector`,
       );
-      return unwrapDetectSemantics(nodes);
+      return unwrapNormalizeSemantics(nodes);
     }
   };
 }

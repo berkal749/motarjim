@@ -10,7 +10,7 @@ fun GeneratedView() {
             title = { Text("Title") }
         )
         Column {
-            Box(modifier = Modifier) {
+            Column {
                 Text(text = "Premium Wireless Headphones Experience crystal-clear audio with noise cancellation technology.")
                 Button(
                     onClick = { }
@@ -24,17 +24,50 @@ fun GeneratedView() {
             }
         }
         Column {
-            Card(
-                modifier = Modifier
-            ) {
+            Column {
                 Image(
                     painter = painterResource(id = R.drawable.headphones.jpg),
                     contentDescription = "Wireless Headphones"
                 )
-            }
-                .semantics {
-                    contentDescription = "Wireless Headphones $99.99 High-quality wireless audio with 30-hour battery life. Add to Cart"
+                Text(text = "Wireless Headphones $99.99 High-quality wireless audio with 30-hour battery life.")
+                Button(
+                    onClick = { }
+                ) {
+                    Text(text = "Add to Cart")
                 }
+                    
+                    .semantics {
+                        contentDescription = "Add to Cart"
+                    }
+                Image(
+                    painter = painterResource(id = R.drawable.speaker.jpg),
+                    contentDescription = "Bluetooth Speaker"
+                )
+                Text(text = "Bluetooth Speaker $49.99 Portable speaker with rich bass and 360-degree sound.")
+                Button(
+                    onClick = { }
+                ) {
+                    Text(text = "Add to Cart")
+                }
+                    
+                    .semantics {
+                        contentDescription = "Add to Cart"
+                    }
+                Image(
+                    painter = painterResource(id = R.drawable.earbuds.jpg),
+                    contentDescription = "Wireless Earbuds"
+                )
+                Text(text = "Wireless Earbuds $79.99 Compact earbuds with active noise cancellation.")
+                Button(
+                    onClick = { }
+                ) {
+                    Text(text = "Add to Cart")
+                }
+                    
+                    .semantics {
+                        contentDescription = "Add to Cart"
+                    }
+            }
         }
         Column {
             Text(text = "© 2026 ShopStore. All rights reserved.")
