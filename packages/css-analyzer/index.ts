@@ -1,8 +1,6 @@
-// CSS analyzer using PostCSS for proper parsing with media query support.
-// Maintains the same external API: parseCss(), matchSelector(), resolveStyles(), applyStyles().
-
 import postcss from 'postcss';
-import { CssStylesheet, CssRule, CssMediaQuery, HtmlNode, ResolvedStyles, StyledNode, ResponsiveHint } from '@html-native/shared';
+import type { CssStylesheet, CssRule, CssMediaQuery, HtmlNode, ResolvedStyles, StyledNode, ResponsiveHint, Result } from '@html-native/shared';
+import { DiagnosticBag } from '@html-native/shared/diagnostics.js';
 
 export { detectLayoutIntent, analyzeLayoutIntents, describeLayout, LAYOUT_PATTERNS } from './intent.js';
 export {
@@ -33,17 +31,25 @@ function parseSelectors(selector: string): string[] {
   return selector.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-export function parseCss(css: string): CssStylesheet {
+export function parseCss(css: string, file: string = 'styles.css'): Result<CssStylesheet> {
+  const bag = new DiagnosticBag();
   const result: CssStylesheet = { rules: [], mediaQueries: [] };
 
-  if (!css.trim()) return result;
+  if (!css.trim()) {
+    bag.addInfo('CSS_001', 'Empty CSS input, returning empty stylesheet', 'css');
+    return bag.toResult(result);
+  }
 
   let root: postcss.Root;
   try {
     root = postcss.parse(css);
-  } catch {
-    console.warn('Failed to parse CSS, returning empty stylesheet');
-    return result;
+  } catch (err) {
+    bag.addError('CSS_002', `Failed to parse CSS: ${(err as Error).message}`, 'css', {
+      file,
+      start: { line: 0, column: 0 },
+      end: { line: 0, column: 0 },
+    });
+    return bag.asResult();
   }
 
   for (const node of root.nodes) {
@@ -75,7 +81,7 @@ export function parseCss(css: string): CssStylesheet {
     }
   }
 
-  return result;
+  return bag.toResult(result);
 }
 
 export function extractResponsiveHints(stylesheet: CssStylesheet): ResponsiveHint[] {
@@ -144,7 +150,9 @@ export function resolveStyles(node: HtmlNode, stylesheet: CssStylesheet): Resolv
   return styles;
 }
 
-export function applyStyles(nodes: HtmlNode[], stylesheet: CssStylesheet): StyledNode[] {
+export function applyStyles(nodes: HtmlNode[], stylesheet: CssStylesheet, file: string = 'input.html'): Result<StyledNode[]> {
+  const bag = new DiagnosticBag();
+
   function apply(nodes: HtmlNode[]): StyledNode[] {
     return nodes.map(node => ({
       node,
@@ -152,5 +160,11 @@ export function applyStyles(nodes: HtmlNode[], stylesheet: CssStylesheet): Style
       children: apply(node.children),
     }));
   }
-  return apply(nodes);
+
+  if (stylesheet.rules.length === 0 && stylesheet.mediaQueries.length === 0) {
+    bag.addInfo('CSS_003', 'No CSS rules to apply, nodes will be unstyled', 'css');
+  }
+
+  const styled = apply(nodes);
+  return bag.toResult(styled);
 }
