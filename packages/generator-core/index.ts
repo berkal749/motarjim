@@ -1,4 +1,4 @@
-import { UiNode } from '@html-native/shared';
+import { UiNode, SourceSpan } from '@html-native/shared';
 
 export {
   selectWidget,
@@ -60,63 +60,90 @@ export interface NodeEmitter {
   emitDefault(node: UiNode, indent: string, children: string[]): string;
 }
 
-// -- Shared traversal --
+// -- Source tracking helpers --
 
-function walkChildren(node: UiNode, emitter: NodeEmitter, level: number): string[] {
-  return node.children.map(c => walkTree(c, emitter, level));
+export function formatSourcePos(span: SourceSpan): string {
+  return `${span.file}:${span.start.line}:${span.start.column}`;
 }
 
-export function walkTree(node: UiNode, emitter: NodeEmitter, level: number = 0): string {
+// -- Shared traversal --
+
+function walkChildren(node: UiNode, emitter: NodeEmitter, level: number, sourceComments: boolean): string[] {
+  return node.children.map(c => walkTree(c, emitter, level, sourceComments));
+}
+
+export function walkTree(node: UiNode, emitter: NodeEmitter, level: number = 0, sourceComments: boolean = false): string {
   const i = emitter.indentUnit.repeat(level);
   const nextLevel = level + 1;
 
+  const sourcePrefix = sourceComments && node.sourceSpan
+    ? `${i}// ${formatSourcePos(node.sourceSpan)}\n`
+    : '';
+
+  let result: string;
+
   switch (node.type) {
     case 'Text':
-      return emitter.emitText(node, i);
+      result = emitter.emitText(node, i);
+      break;
 
     case 'Button': {
       const label = findTextLabel(node) || 'Button';
       const nonTextChildren = getNonTextChildren(node);
-      const rendered = nonTextChildren.map(c => walkTree(c, emitter, nextLevel));
-      return emitter.emitButton(i, label, rendered);
+      const rendered = nonTextChildren.map(c => walkTree(c, emitter, nextLevel, sourceComments));
+      result = emitter.emitButton(i, label, rendered);
+      break;
     }
 
     case 'Row':
-      return emitter.emitRow(i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitRow(i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     case 'Column':
-      return emitter.emitColumn(i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitColumn(i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     case 'Container':
-      return emitter.emitContainer(node, i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitContainer(node, i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     case 'NavigationBar':
     case 'AppBar': {
       const title = findTextLabel(node) || 'Title';
-      return emitter.emitAppBar(i, title);
+      result = emitter.emitAppBar(i, title);
+      break;
     }
 
     case 'Card':
-      return emitter.emitCard(i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitCard(i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     case 'Image':
-      return emitter.emitImage(node, i);
+      result = emitter.emitImage(node, i);
+      break;
 
     case 'TextField':
-      return emitter.emitTextField(i);
+      result = emitter.emitTextField(i);
+      break;
 
     case 'ListView':
     case 'LazyList':
     case 'ScrollView':
-      return emitter.emitScrollView(i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitScrollView(i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     case 'Form':
-      return emitter.emitForm(i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitForm(i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     case 'Footer':
-      return emitter.emitFooter(i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitFooter(i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
 
     default:
-      return emitter.emitDefault(node, i, walkChildren(node, emitter, nextLevel));
+      result = emitter.emitDefault(node, i, walkChildren(node, emitter, nextLevel, sourceComments));
+      break;
   }
+
+  return sourcePrefix + result;
 }

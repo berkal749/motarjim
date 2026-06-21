@@ -84,11 +84,11 @@ const flutterEmitter: NodeEmitter = {
   },
 };
 
-export function generate(node: UiNode, name: string = 'GeneratedView'): Result<GenerateResult> {
+export function generate(node: UiNode, name: string = 'GeneratedView', sourceComments: boolean = false): Result<GenerateResult> {
   const bag = new DiagnosticBag();
   const start = performance.now();
 
-  const body = walkTree(node, flutterEmitter, 0);
+  const body = walkTree(node, flutterEmitter, 0, sourceComments);
   const lines = body.split('\n');
   const indentedBody = lines
     .map((line, i) => i === 0 ? line : `    ${line}`)

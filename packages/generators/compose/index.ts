@@ -76,11 +76,11 @@ const composeEmitter: NodeEmitter = {
   },
 };
 
-export function generate(node: UiNode, name: string = 'GeneratedView'): Result<GenerateResult> {
+export function generate(node: UiNode, name: string = 'GeneratedView', sourceComments: boolean = false): Result<GenerateResult> {
   const bag = new DiagnosticBag();
   const start = performance.now();
 
-  const body = walkTree(node, composeEmitter, 0);
+  const body = walkTree(node, composeEmitter, 0, sourceComments);
   const indentedBody = body
     .split('\n')
     .map(line => `    ${line}`)
